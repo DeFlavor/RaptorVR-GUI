@@ -1,5 +1,5 @@
 import { useLocalization } from '@fluent/react';
-import { useContext, useState } from 'react';
+import { useContext, useEffect, useMemo, useState } from 'react';
 import { BaseModal } from './commons/BaseModal';
 import { Button } from './commons/Button';
 import { Typography } from './commons/Typography';
@@ -8,21 +8,62 @@ import { GH_REPO, VersionContext } from '@/App';
 import { error } from '@/utils/logging';
 import { useElectron } from '@/hooks/electron';
 import { openUrl } from '@/hooks/crossplatform';
+import type { AppUpdateStatus } from '../../electron/preload/interface';
+
+const CHECK_FOR_UPDATES_EVENT = 'raptorvr-check-for-updates';
 
 export function VersionUpdateModal() {
   const electron = useElectron();
+  const electronApi = electron.isElectron ? electron.api : null;
   const { l10n } = useLocalization();
   const newVersion = useContext(VersionContext);
   const [forceClose, setForceClose] = useState(false);
+  const [manualCheck, setManualCheck] = useState(false);
+  const [updateInteractionStarted, setUpdateInteractionStarted] =
+    useState(false);
+  const [updateStatus, setUpdateStatus] = useState<AppUpdateStatus>({
+    state: 'idle',
+  });
+
+  useEffect(() => {
+    if (!electronApi) return;
+
+    const unsubscribe = electronApi.onUpdateStatus(setUpdateStatus);
+    electronApi
+      .getUpdateStatus()
+      .then(setUpdateStatus)
+      .catch(() => undefined);
+    electronApi.checkForUpdates().catch(() => undefined);
+
+    const checkManually = () => {
+      setForceClose(false);
+      setManualCheck(true);
+      electronApi.checkForUpdates().catch(() => undefined);
+    };
+    window.addEventListener(CHECK_FOR_UPDATES_EVENT, checkManually);
+
+    return () => {
+      unsubscribe();
+      window.removeEventListener(CHECK_FOR_UPDATES_EVENT, checkManually);
+    };
+  }, [electronApi]);
+
+  const displayedVersion =
+    'version' in updateStatus ? updateStatus.version : newVersion;
+
   const closeModal = () => {
-    localStorage.setItem('lastVersionFound', newVersion);
+    if (displayedVersion) {
+      localStorage.setItem('lastVersionFound', displayedVersion);
+    }
+    setManualCheck(false);
     setForceClose(true);
   };
+
   let isVersionNew = false;
   try {
-    if (newVersion) {
+    if (displayedVersion) {
       isVersionNew = semver.gt(
-        newVersion,
+        displayedVersion,
         localStorage.getItem('lastVersionFound') || 'v0.0.0'
       );
     }
@@ -30,9 +71,81 @@ export function VersionUpdateModal() {
     error('failed to parse new version');
   }
 
+  const isElectronUpdateOpen =
+    electron.isElectron &&
+    (manualCheck ||
+      updateInteractionStarted ||
+      updateStatus.state === 'downloading' ||
+      updateStatus.state === 'downloaded' ||
+      (updateStatus.state === 'available' && isVersionNew));
+  const isWebUpdateOpen = !electron.isElectron && !!newVersion && isVersionNew;
+
+  const description = useMemo(() => {
+    switch (updateStatus.state) {
+      case 'checking':
+        return 'Checking the RaptorVR release channel…';
+      case 'available':
+        return 'Download this release securely and install it without leaving Raptor VR GUI.';
+      case 'downloading':
+        return `Downloading update… ${Math.round(updateStatus.percent)}%`;
+      case 'downloaded':
+        return 'The update is ready. Restart Raptor VR GUI to finish installing it.';
+      case 'not-available':
+        return `You already have the newest Raptor VR GUI release (${updateStatus.version}).`;
+      case 'unsupported':
+      case 'error':
+        return updateStatus.message;
+      default:
+        return l10n.getString('version_update-description');
+    }
+  }, [l10n, updateStatus]);
+
+  const runPrimaryAction = async () => {
+    if (!electron.isElectron) {
+      await openUrl(`https://github.com/${GH_REPO}/releases/latest`);
+      closeModal();
+      return;
+    }
+
+    if (updateStatus.state === 'available') {
+      setUpdateInteractionStarted(true);
+      await electron.api.downloadUpdate();
+      return;
+    }
+    if (updateStatus.state === 'downloaded') {
+      await electron.api.installUpdate();
+      return;
+    }
+    if (
+      updateStatus.state === 'error' ||
+      updateStatus.state === 'unsupported'
+    ) {
+      await openUrl(`https://github.com/${GH_REPO}/releases/latest`);
+      return;
+    }
+    closeModal();
+  };
+
+  const primaryLabel = !electron.isElectron
+    ? l10n.getString('version_update-update')
+    : updateStatus.state === 'available'
+      ? 'Download update'
+      : updateStatus.state === 'downloaded'
+        ? 'Restart and install'
+        : updateStatus.state === 'error' || updateStatus.state === 'unsupported'
+          ? 'Open download page'
+          : updateStatus.state === 'checking' ||
+              updateStatus.state === 'downloading'
+            ? 'Please wait…'
+            : 'Done';
+
+  const isBusy =
+    electron.isElectron &&
+    (updateStatus.state === 'checking' || updateStatus.state === 'downloading');
+
   return (
     <BaseModal
-      isOpen={!forceClose && !!newVersion && isVersionNew}
+      isOpen={!forceClose && (isElectronUpdateOpen || isWebUpdateOpen)}
       onRequestClose={closeModal}
     >
       <div className="flex flex-col gap-3">
@@ -40,28 +153,40 @@ export function VersionUpdateModal() {
           <div className="flex flex-col items-center gap-3 fill-accent-background-20">
             <div className="flex flex-col items-center gap-2">
               <Typography variant="main-title">
-                {l10n.getString('version_update-title', {
-                  version: newVersion,
-                })}
+                {updateStatus.state === 'not-available'
+                  ? 'Raptor VR GUI is up to date'
+                  : updateStatus.state === 'downloaded'
+                    ? 'Update ready to install'
+                    : l10n.getString('version_update-title', {
+                        version: displayedVersion,
+                      })}
               </Typography>
-              <Typography variant="standard">
-                {l10n.getString('version_update-description')}
-              </Typography>
+              <Typography variant="standard">{description}</Typography>
             </div>
           </div>
 
+          {updateStatus.state === 'downloading' && (
+            <div
+              className="h-2 overflow-hidden rounded-full bg-background-60"
+              role="progressbar"
+              aria-label="Update download progress"
+              aria-valuemin={0}
+              aria-valuemax={100}
+              aria-valuenow={Math.round(updateStatus.percent)}
+            >
+              <div
+                className="h-full bg-accent-background-20 transition-[width] duration-300"
+                style={{ width: `${updateStatus.percent}%` }}
+              />
+            </div>
+          )}
+
           <Button
             variant="primary"
-            onClick={async () => {
-              const url =
-                electron.isElectron && electron.data().os.type === 'windows'
-                  ? 'https://slimevr.dev/download'
-                  : `https://github.com/${GH_REPO}/releases/latest`;
-              await openUrl(url);
-              closeModal();
-            }}
+            disabled={isBusy}
+            onClick={() => runPrimaryAction().catch(() => undefined)}
           >
-            {l10n.getString('version_update-update')}
+            {primaryLabel}
           </Button>
           <Button variant="tertiary" onClick={closeModal}>
             {l10n.getString('version_update-close')}

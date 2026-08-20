@@ -14,6 +14,23 @@ export type OSStats = {
   type: 'linux' | 'windows' | 'macos' | 'unknown';
 };
 
+export type AppUpdateStatus =
+  | { state: 'idle' }
+  | { state: 'checking' }
+  | { state: 'available'; version: string }
+  | { state: 'not-available'; version: string }
+  | {
+      state: 'downloading';
+      version: string;
+      percent: number;
+      transferred: number;
+      total: number;
+      bytesPerSecond: number;
+    }
+  | { state: 'downloaded'; version: string }
+  | { state: 'unsupported'; message: string }
+  | { state: 'error'; message: string };
+
 export interface CrossStorage {
   set(key: string, value: unknown): Promise<void>;
   get<T>(key: string): Promise<T | undefined>;
@@ -34,10 +51,15 @@ export type GHReturn = {
     | null;
 };
 
-export type DiscordPresence = { enable: false } | { enable: true, activity: string }
+export type DiscordPresence = { enable: false } | { enable: true; activity: string };
 
 export interface IElectronAPI {
   onServerStatus: (cb: (data: ServerStatusEvent) => void) => () => void;
+  onUpdateStatus: (cb: (data: AppUpdateStatus) => void) => () => void;
+  getUpdateStatus: () => Promise<AppUpdateStatus>;
+  checkForUpdates: () => Promise<void>;
+  downloadUpdate: () => Promise<void>;
+  installUpdate: () => Promise<void>;
   openUrl: (url: string) => Promise<void>;
   osStats: () => Promise<OSStats>;
   openLogsFolder: () => Promise<void>;

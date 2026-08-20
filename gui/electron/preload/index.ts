@@ -1,5 +1,5 @@
 import { contextBridge, ipcRenderer, IpcRendererEvent } from 'electron';
-import { IElectronAPI, ServerStatusEvent } from './interface';
+import { AppUpdateStatus, IElectronAPI, ServerStatusEvent } from './interface';
 import { IPC_CHANNELS } from '../shared';
 
 contextBridge.exposeInMainWorld('electronAPI', {
@@ -9,12 +9,23 @@ contextBridge.exposeInMainWorld('electronAPI', {
     ipcRenderer.on(IPC_CHANNELS.SERVER_STATUS, subscription);
     return () => ipcRenderer.removeListener(IPC_CHANNELS.SERVER_STATUS, subscription);
   },
+  onUpdateStatus: (callback) => {
+    const subscription = (_event: IpcRendererEvent, value: AppUpdateStatus) =>
+      callback(value);
+    ipcRenderer.on(IPC_CHANNELS.UPDATER_STATUS, subscription);
+    return () => ipcRenderer.removeListener(IPC_CHANNELS.UPDATER_STATUS, subscription);
+  },
+  getUpdateStatus: () => ipcRenderer.invoke(IPC_CHANNELS.UPDATER_GET_STATUS),
+  checkForUpdates: () => ipcRenderer.invoke(IPC_CHANNELS.UPDATER_CHECK),
+  downloadUpdate: () => ipcRenderer.invoke(IPC_CHANNELS.UPDATER_DOWNLOAD),
+  installUpdate: () => ipcRenderer.invoke(IPC_CHANNELS.UPDATER_INSTALL),
   openUrl: (url) => ipcRenderer.invoke(IPC_CHANNELS.OPEN_URL, url),
   osStats: () => ipcRenderer.invoke(IPC_CHANNELS.OS_STATS),
   close: () => ipcRenderer.invoke(IPC_CHANNELS.WINDOW_ACTIONS, 'close'),
   hide: () => ipcRenderer.invoke(IPC_CHANNELS.WINDOW_ACTIONS, 'hide'),
   minimize: () => ipcRenderer.invoke(IPC_CHANNELS.WINDOW_ACTIONS, 'minimize'),
-  toggleMaximize: () => ipcRenderer.invoke(IPC_CHANNELS.WINDOW_ACTIONS, 'toggle-maximize'),
+  toggleMaximize: () =>
+    ipcRenderer.invoke(IPC_CHANNELS.WINDOW_ACTIONS, 'toggle-maximize'),
   getStorage: async (type) => {
     return {
       get: (key) =>
@@ -32,8 +43,16 @@ contextBridge.exposeInMainWorld('electronAPI', {
   setTranslations: () => {},
   openDialog: (options) => ipcRenderer.invoke(IPC_CHANNELS.OPEN_DIALOG, options),
   saveDialog: (options) => ipcRenderer.invoke(IPC_CHANNELS.SAVE_DIALOG, options),
-  openConfigFolder: async () => ipcRenderer.invoke(IPC_CHANNELS.OPEN_FILE, await ipcRenderer.invoke(IPC_CHANNELS.GET_FOLDER, 'config')),
-  openLogsFolder: async () => ipcRenderer.invoke(IPC_CHANNELS.OPEN_FILE, await ipcRenderer.invoke(IPC_CHANNELS.GET_FOLDER, 'logs')),
+  openConfigFolder: async () =>
+    ipcRenderer.invoke(
+      IPC_CHANNELS.OPEN_FILE,
+      await ipcRenderer.invoke(IPC_CHANNELS.GET_FOLDER, 'config')
+    ),
+  openLogsFolder: async () =>
+    ipcRenderer.invoke(
+      IPC_CHANNELS.OPEN_FILE,
+      await ipcRenderer.invoke(IPC_CHANNELS.GET_FOLDER, 'logs')
+    ),
   openFile: (path) => ipcRenderer.invoke(IPC_CHANNELS.OPEN_FILE, path),
   ghGet: (req) => ipcRenderer.invoke(IPC_CHANNELS.GH_FETCH, req),
   setPresence: (options) => ipcRenderer.invoke(IPC_CHANNELS.DISCORD_PRESENCE, options),

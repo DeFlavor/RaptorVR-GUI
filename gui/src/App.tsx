@@ -60,7 +60,7 @@ import { AppLocalizationProvider } from './i18n/config';
 import { openUrl } from './hooks/crossplatform';
 import { UdevRulesModal } from './components/onboarding/UdevRulesModal';
 
-export const GH_REPO = 'SlimeVR/SlimeVR-Server';
+export const GH_REPO = 'DeFlavor/RaptorVR-GUI';
 export const VersionContext = createContext('');
 export const DOCS_SITE = 'https://raptorvr.shop/#contact';
 export const SLIMEVR_DISCORD = 'https://raptorvr.shop/#contact';
@@ -213,6 +213,8 @@ export default function App() {
   useEffect(() => {
     // don't show update stuff when on android
     if (window.__ANDROID__?.isThere()) return;
+    // Packaged desktop builds use electron-updater through the main process.
+    if (electron.isElectron) return;
 
     if (!semver.valid(__VERSION_TAG__)) {
       log(
@@ -241,7 +243,7 @@ export default function App() {
       }
     }
     fetchReleases().catch((e) => error(e, 'failed to fetch releases'));
-  }, []);
+  }, [electron.isElectron]);
 
   if (electron.isElectron) {
     useEffect(() => {

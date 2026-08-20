@@ -1,7 +1,14 @@
 appId: com.raptorvr.gui
 productName: Raptor VR GUI
-# Global naming pattern
-artifactName: '${productName}-${version}-${os}-${arch}.${ext}'
+artifactName: 'Raptor-VR-GUI-${version}-${os}-${arch}.${ext}'
+electronUpdaterCompatibility: '>= 2.16'
+
+publish:
+  provider: github
+  owner: DeFlavor
+  repo: RaptorVR-GUI
+  channel: latest
+  releaseType: release
 
 directories:
   output: dist/artifacts/${os}
@@ -34,7 +41,7 @@ extraFiles:
 
 linux:
   category: Game
-  artifactName: '${productName}-${arch}.${ext}'
+  artifactName: 'Raptor-VR-GUI-${arch}.${ext}'
   target:
     - target: AppImage
     - target: deb
@@ -61,8 +68,10 @@ rpm:
   afterRemove: './electron/resources/scripts/postremove.sh'
 
 win:
-  artifactName: '${productName}-${os}-${arch}.${ext}'
-  target: zip
+  artifactName: 'Raptor-VR-GUI-Windows-${arch}.${ext}'
+  target:
+    - target: nsis
+    - target: zip
   icon: './electron/resources/icons/icon.ico'
   extraFiles:
     - from: '../server/desktop/build/libs/slimevr.jar'
@@ -77,9 +86,17 @@ win:
     - from: './electron/resources/jre'
       to: 'jre'
 
+nsis:
+  oneClick: true
+  perMachine: false
+  allowElevation: true
+  deleteAppDataOnUninstall: false
+
 mac:
-  target: dmg
-  artifactName: 'Raptor-VR-GUI-mac.${ext}'
+  target:
+    - target: dmg
+    - target: zip
+  artifactName: 'Raptor-VR-GUI-macOS-${arch}.${ext}'
   x64ArchFiles: '**/register-protocol-handler.node'
   icon: './electron/resources/icons/icon.icns'
   extraFiles:

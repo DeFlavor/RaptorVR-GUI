@@ -4,10 +4,21 @@ import {
   SaveDialogOptions,
   SaveDialogReturnValue,
 } from 'electron';
-import { DiscordPresence, GHGet, GHReturn, OSStats } from './preload/interface';
+import {
+  AppUpdateStatus,
+  DiscordPresence,
+  GHGet,
+  GHReturn,
+  OSStats,
+} from './preload/interface';
 
 export const IPC_CHANNELS = {
   SERVER_STATUS: 'server-status',
+  UPDATER_STATUS: 'updater-status',
+  UPDATER_GET_STATUS: 'updater-get-status',
+  UPDATER_CHECK: 'updater-check',
+  UPDATER_DOWNLOAD: 'updater-download',
+  UPDATER_INSTALL: 'updater-install',
   OPEN_URL: 'open-url',
   OS_STATS: 'os-stats',
   WINDOW_ACTIONS: 'window-actions',
@@ -19,12 +30,16 @@ export const IPC_CHANNELS = {
   OPEN_FILE: 'open-file',
   GET_FOLDER: 'get-folder',
   GH_FETCH: 'gh-fetch',
-  DISCORD_PRESENCE: 'discord-presence'
+  DISCORD_PRESENCE: 'discord-presence',
 } as const;
 
 export interface IpcInvokeMap {
   [IPC_CHANNELS.OPEN_URL]: (url: string) => void;
   [IPC_CHANNELS.OS_STATS]: () => Promise<OSStats>;
+  [IPC_CHANNELS.UPDATER_GET_STATUS]: () => AppUpdateStatus;
+  [IPC_CHANNELS.UPDATER_CHECK]: () => Promise<void>;
+  [IPC_CHANNELS.UPDATER_DOWNLOAD]: () => Promise<void>;
+  [IPC_CHANNELS.UPDATER_INSTALL]: () => Promise<void>;
   [IPC_CHANNELS.WINDOW_ACTIONS]: (
     action: 'close' | 'minimize' | 'toggle-maximize' | 'hide'
   ) => void;

@@ -1,4 +1,4 @@
-import { ReactNode, useContext, useEffect, useState } from 'react';
+import { ReactNode, useEffect, useState } from 'react';
 import { NavLink, useMatch } from 'react-router-dom';
 import {
   RpcMessage,
@@ -13,7 +13,7 @@ import { MinimiseIcon } from './commons/icon/MinimiseIcon';
 import { RaptorMarkIcon } from './commons/icon/RaptorMarkIcon';
 import { ProgressBar } from './commons/ProgressBar';
 import { DownloadIcon } from './commons/icon/DownloadIcon';
-import { DOCS_SITE, GH_REPO, VersionContext } from '@/App';
+import { DOCS_SITE } from '@/App';
 import classNames from 'classnames';
 import { QuestionIcon } from './commons/icon/QuestionIcon';
 import { useBreakpoint } from '@/hooks/breakpoint';
@@ -53,7 +53,6 @@ export function TopBar({
   const { useRPCPacket, sendRPCPacket } = useWebsocketAPI();
   const connectedIMUTrackers = useAtomValue(connectedIMUTrackersAtom);
   const { config, setConfig, saveConfig } = useConfig();
-  const version = useContext(VersionContext);
   const [localIp, setLocalIp] = useState<string | null>(null);
   const [showConnectedTrackersWarning, setConnectedTrackerWarning] =
     useState(false);
@@ -164,19 +163,20 @@ export function TopBar({
                 </div>
               )}
 
-              {version && electron.isElectron && (
-                <div
+              {electron.isElectron && (
+                <button
+                  type="button"
                   className="cursor-pointer"
-                  onClick={() => {
-                    const url =
-                      electron.data().os.type === 'windows'
-                        ? 'https://raptorvr.shop'
-                        : `https://github.com/${GH_REPO}/releases/latest`;
-                    openUrl(url);
-                  }}
+                  aria-label="Check for Raptor VR GUI updates"
+                  title="Check for updates"
+                  onClick={() =>
+                    window.dispatchEvent(
+                      new Event('raptorvr-check-for-updates')
+                    )
+                  }
                 >
                   <DownloadIcon />
-                </div>
+                </button>
               )}
             </div>
           </div>

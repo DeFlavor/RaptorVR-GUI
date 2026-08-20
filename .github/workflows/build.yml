@@ -218,7 +218,7 @@ jobs:
             ${{ matrix.platform == 'macos' && '--universal' || '' }} \
             --config.extraMetadata.version="$VERSION" \
             --publish never
-      - name: Collect and Rename Artifacts
+      - name: Collect Release Artifacts
         shell: bash
         run: |
           SRC_DIR="${{ github.workspace }}/gui/dist/artifacts"
@@ -226,18 +226,13 @@ jobs:
           mkdir -p "$DEST_DIR"
 
           if [ "${{ matrix.platform }}" == "windows" ]; then
-            cp "$SRC_DIR"/win/*.zip "$DEST_DIR/Raptor-VR-GUI-Windows-x64.zip"
+            find "$SRC_DIR/win" -maxdepth 1 -type f -exec cp {} "$DEST_DIR/" \;
 
           elif [ "${{ matrix.platform }}" == "linux" ]; then
-            for f in "$SRC_DIR"/linux/*; do
-              [ -d "$f" ] && continue
-              BASE=$(basename "$f")
-              NEW_NAME=$(echo "$BASE" | sed -e 's/^Raptor VR GUI/Raptor-VR-GUI/' -e 's/x86_64/x64/g' -e 's/arm64/aarch64/g')
-              cp "$f" "$DEST_DIR/$NEW_NAME"
-            done
+            find "$SRC_DIR/linux" -maxdepth 1 -type f -exec cp {} "$DEST_DIR/" \;
 
           elif [ "${{ matrix.platform }}" == "macos" ]; then
-            cp "$SRC_DIR"/mac/*.dmg "$DEST_DIR/Raptor-VR-GUI-macOS-universal.dmg"
+            find "$SRC_DIR/mac" -maxdepth 1 -type f -exec cp {} "$DEST_DIR/" \;
           fi
 
           echo "Collected files:"

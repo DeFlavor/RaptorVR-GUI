@@ -29,6 +29,7 @@ import {
 } from './paths';
 import { initStores } from './store';
 import { closeLogger, logger } from './logger';
+import { initializeAppUpdater } from './updater';
 
 import { spawn } from 'node:child_process';
 import { discordPresence } from './presence';
@@ -133,6 +134,7 @@ handleIpc(IPC_CHANNELS.OPEN_URL, (e, url) => {
     /^https:\/\/(?:.+\.)?slimevr\.dev(?:\/.+)?$/,
     /^https:\/\/(?:.+\.)?raptorvr\.shop(?:\/.+)?$/,
     /^https:\/\/github\.com\/SlimeVR(?:\/.+)?$/,
+    /^https:\/\/github\.com\/DeFlavor\/RaptorVR-GUI(?:\/.+)?$/,
     /^https:\/\/discord\.gg\/slimevr$/,
   ];
   if (allowed_urls.find((a) => url.match(a))) open(url);
@@ -495,6 +497,26 @@ app.whenReady().then(async () => {
   checkEnvironmentVariables();
   const server = await spawnServer();
 
+  const cleanUpApplication = async () => {
+    server?.close();
+    await server?.waitForExit();
+    await stores.settings.save();
+    await stores.cache.save();
+    discordPresence.destroy();
+    await saveWindowState();
+    await closeLogger();
+  };
+
+  initializeAppUpdater(
+    () => mainWindow,
+    async () => {
+      if (isQuitting) return;
+      isQuitting = true;
+      logger.info('Preparing to install Raptor VR GUI update');
+      await cleanUpApplication();
+    }
+  );
+
   createWindow();
 
   logger.info('Raptor VR GUI started!');
@@ -508,13 +530,7 @@ app.whenReady().then(async () => {
     isQuitting = true;
     event.preventDefault();
     logger.info('App quitting, saving...');
-    server?.close();
-    await server?.waitForExit();
-    await stores.settings.save();
-    await stores.cache.save();
-    discordPresence.destroy();
-    await saveWindowState();
-    await closeLogger();
+    await cleanUpApplication();
     app.exit(0);
   });
 });
