@@ -1,0 +1,12 @@
+RaptorVR GUI 20.1.0-raptor.1
+
+RaptorVR GUI is based on the SlimeVR Server v20.1.0 open-source project.
+The tracking engine, communication protocols, calibration system, and
+SteamVR integration remain compatible with that upstream release.
+
+SlimeVR software is Copyright (c) 2020 Eiren Rain and SlimeVR Contributors
+and is made available under the original MIT or Apache License 2.0 terms
+included with this distribution. SlimeVR is a trademark of SlimeVR B.V.
+RaptorVR is not presented as the SlimeVR brand or an official SlimeVR product.
+
+RaptorVR branding and visual customizations are Copyright RaptorVR.

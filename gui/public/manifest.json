@@ -1,0 +1,30 @@
+{
+  "name": "Raptor VR GUI",
+  "short_name": "Raptor VR GUI",
+  "description": "Raptor VR full-body tracking setup, calibration, and live motion control",
+  "display": "standalone",
+  "theme_color": "#050505",
+  "background_color": "#050505",
+  "icons": [
+    {
+      "src": "images/raptorvr-mark.png",
+      "type": "image/png",
+      "sizes": "512x512"
+    },
+    {
+      "src": "favicon.ico",
+      "sizes": "64x64 32x32 24x24 16x16",
+      "type": "image/x-icon"
+    },
+    {
+      "src": "images/raptorvr-mark.png",
+      "type": "image/png",
+      "sizes": "192x192"
+    },
+    {
+      "src": "images/raptorvr-mark.png",
+      "type": "image/png",
+      "sizes": "512x512"
+    }
+  ]
+}
