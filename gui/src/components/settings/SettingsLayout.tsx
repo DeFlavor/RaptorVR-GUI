@@ -42,10 +42,6 @@ export function SettingSelectorMobile() {
         label: l10n.getString('settings-sidebar-serial'),
         value: { url: '/settings/serial' },
       },
-      {
-        label: l10n.getString('settings-sidebar-firmware-tool'),
-        value: { url: '/settings/firmware-tool' },
-      },
       ...(vrcConfigState?.isSupported
         ? [
             {
@@ -110,19 +106,22 @@ export function SettingsLayout({ children }: { children: ReactNode }) {
   const { isMobile } = useBreakpoint('mobile');
   return (
     <>
-      <div className="settings-layout h-full">
+      <div className="settings-layout raptor-settings h-full">
         <div style={{ gridArea: 't' }}>
           <TopBar />
         </div>
         <div style={{ gridArea: 'n' }}>
           <Navbar />
         </div>
-        <div style={{ gridArea: 's' }} className="my-2 mobile:hidden">
+        <div
+          style={{ gridArea: 's' }}
+          className="raptor-settings__rail my-2 mobile:hidden"
+        >
           <SettingsSidebar />
         </div>
         <div
           style={{ gridArea: 'c' }}
-          className="xs:pl-2 xs:pb-2 xs:mt-2 mobile:mt-7 overflow-y-auto"
+          className="raptor-settings__content xs:pl-2 xs:pb-2 xs:mt-2 mobile:mt-7 overflow-y-auto"
         >
           {isMobile && <SettingSelectorMobile />}
           {children}

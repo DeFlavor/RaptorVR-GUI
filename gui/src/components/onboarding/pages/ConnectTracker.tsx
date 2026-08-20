@@ -15,7 +15,6 @@ import { useOnboarding } from '@/hooks/onboarding';
 import { useWebsocketAPI } from '@/hooks/websocket-api';
 import { ArrowLink } from '@/components/commons/ArrowLink';
 import { Button } from '@/components/commons/Button';
-import { LoaderIcon, SlimeState } from '@/components/commons/icon/LoaderIcon';
 import { ProgressBar } from '@/components/commons/ProgressBar';
 import { TipBox, WarningBox } from '@/components/commons/TipBox';
 import { Typography } from '@/components/commons/Typography';
@@ -165,20 +164,11 @@ export function ConnectTrackersPage() {
     }
   }, [provisioningStatus]);
 
-  const slimeStatus = useMemo(() => {
-    if (isError) {
-      return SlimeState.SAD;
-    }
-
-    switch (provisioningStatus) {
-      case WifiProvisioningStatus.DONE:
-        return SlimeState.HAPPY;
-      case WifiProvisioningStatus.NONE:
-        return SlimeState.CURIOUS;
-      default:
-        return SlimeState.JUMPY;
-    }
-  }, [provisioningStatus, isError]);
+  const scanState = isError
+    ? 'alert'
+    : provisioningStatus === WifiProvisioningStatus.DONE
+      ? 'ready'
+      : 'searching';
 
   const currentTip = useMemo(
     () =>
@@ -241,8 +231,9 @@ export function ConnectTrackersPage() {
           </div>
         </div>
       </BaseModal>
-      <div className="connect-tracker-layout h-full">
-        <div style={{ gridArea: 's' }} className="p-4">
+      <div className="connect-tracker-layout raptor-connect h-full">
+        <div style={{ gridArea: 's' }} className="raptor-connect__guide p-4">
+          <div className="raptor-connect__eyebrow">PAIRING DECK / 2.4 GHZ</div>
           <Typography variant="main-title">
             {l10n.getString('onboarding-connect_tracker-title')}
           </Typography>
@@ -275,23 +266,49 @@ export function ConnectTrackersPage() {
               }
             />
           )}
+          <div className="raptor-connect__steps" aria-hidden="true">
+            <span className="is-complete">01 / WI-FI</span>
+            <span
+              className={
+                provisioningStatus !== WifiProvisioningStatus.NONE
+                  ? 'is-active'
+                  : ''
+              }
+            >
+              02 / PAIR
+            </span>
+            <span
+              className={
+                provisioningStatus === WifiProvisioningStatus.DONE
+                  ? 'is-complete'
+                  : ''
+              }
+            >
+              03 / READY
+            </span>
+          </div>
           <div
             className={classNames(
-              'rounded-xl h-24 flex gap-2 p-3 lg:w-full mt-4 relative',
+              'raptor-connect__status rounded-xl min-h-28 flex gap-3 p-4 lg:w-full mt-4 relative',
               state.alonePage ? 'bg-background-60' : 'bg-background-70',
               isError && 'border-2 border-status-critical'
             )}
           >
             <div
               className={classNames(
-                'flex flex-col justify-center fill-background-10 absolute',
-                'right-5 bottom-8'
+                'raptor-signal raptor-connect__signal',
+                `raptor-signal--${scanState}`
               )}
+              aria-hidden="true"
             >
-              <LoaderIcon slimeState={slimeStatus} />
+              <span className="raptor-signal__ring raptor-signal__ring--outer" />
+              <span className="raptor-signal__ring raptor-signal__ring--inner" />
+              <span className="raptor-signal__sweep" />
+              <span className="raptor-signal__dot" />
+              <img src="/images/raptorvr-mark.png" alt="" />
             </div>
 
-            <div className="flex flex-col grow self-center">
+            <div className="flex flex-col grow self-center min-w-0">
               <Typography bold>
                 {l10n.getString('onboarding-connect_tracker-usb')}
               </Typography>
@@ -329,15 +346,27 @@ export function ConnectTrackersPage() {
             {!state.alonePage && <MoreSetsConfirm />}
           </div>
         </div>
-        <div style={{ gridArea: 't' }} className="flex items-center px-5 pt-5">
-          <Typography bold>
-            {l10n.getString('onboarding-connect_tracker-connected_trackers', {
-              amount: connectedIMUTrackers.length,
-            })}
-          </Typography>
+        <div
+          style={{ gridArea: 't' }}
+          className="raptor-connect__deck-title flex items-center justify-between px-5 pt-5"
+        >
+          <div>
+            <span>LIVE TRACKER DECK</span>
+            <Typography bold>
+              {l10n.getString('onboarding-connect_tracker-connected_trackers', {
+                amount: connectedIMUTrackers.length,
+              })}
+            </Typography>
+          </div>
+          <strong>
+            {String(connectedIMUTrackers.length).padStart(2, '0')}
+          </strong>
         </div>
-        <div style={{ gridArea: 'c' }} className="xs:overflow-y-auto">
-          <div className="grid lg:grid-cols-2 md:grid-cols-1 gap-2 pr-1 mx-5 py-4">
+        <div
+          style={{ gridArea: 'c' }}
+          className="raptor-connect__deck xs:overflow-y-auto"
+        >
+          <div className="raptor-connect__tracker-grid grid lg:grid-cols-2 md:grid-cols-1 gap-3 pr-1 mx-5 py-4">
             {Array.from({
               ...connectedIMUTrackers,
               length: Math.max(connectedIMUTrackers.length, 1),

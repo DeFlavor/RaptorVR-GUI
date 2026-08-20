@@ -286,9 +286,12 @@ export function TrackersAssignPage() {
         onClose={() => closeChokerWarning(true)}
         accept={() => closeChokerWarning(false)}
       />
-      <div className="w-full h-full xs:p-4 p-2 flex justify-center">
+      <div className="raptor-assignment w-full h-full xs:p-4 p-2 flex justify-center">
         <div className="flex xs:gap-4 w-full max-w-screen-xl flex-col md:flex-row">
-          <div className="flex flex-col xs:gap-3 gap-2 w-full md:max-w-md">
+          <div className="raptor-assignment__controls flex flex-col xs:gap-3 gap-2 w-full md:max-w-md">
+            <div className="raptor-assignment__eyebrow">
+              RAPTOR BODY MAP / LIVE ASSIGNMENT
+            </div>
             <Typography variant="main-title" color="accent">
               {l10n.getString('onboarding-assign_trackers-title')}
             </Typography>
@@ -362,7 +365,14 @@ export function TrackersAssignPage() {
               </div>
             </div>
           </div>
-          <div className="flex fill-background-50 items-center justify-center flex-grow">
+          <div className="raptor-assignment__stage flex fill-background-50 items-center justify-center flex-grow">
+            <div className="raptor-assignment__stage-meta" aria-hidden="true">
+              <span>ASSIGNMENT GRID</span>
+              <strong>
+                {String(assignedTrackers.length).padStart(2, '0')} /{' '}
+                {String(trackers.length).padStart(2, '0')}
+              </strong>
+            </div>
             <div className="md:w-full md:h-full h-full max-w-[770px] flex flex-col overflow-y-clip tall:py-10">
               <BodyAssignment
                 dotSize={15}

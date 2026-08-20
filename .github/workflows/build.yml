@@ -2,8 +2,11 @@ name: Raptor VR GUI Release
 
 on:
   push:
-    tags: ["v*"]
+    tags: ['v*']
   workflow_dispatch:
+
+permissions:
+  contents: write
 
 jobs:
   setup-matrix:
@@ -94,7 +97,6 @@ jobs:
       - name: Java Spotless Check
         run: ./gradlew spotlessCheck --build-cache
 
-
   build-server-jar:
     name: Build Desktop Server
     runs-on: ubuntu-latest
@@ -121,8 +123,8 @@ jobs:
         with:
           name: server-jar
           path: |
-              server/desktop/build/libs/slimevr.jar
-              server/core/resources
+            server/desktop/build/libs/slimevr.jar
+            server/core/resources
 
   build-gui-frontend:
     name: Build GUI Assets
@@ -143,7 +145,7 @@ jobs:
           cache: 'pnpm'
       - name: Build JS
         env:
-            SENTRY_AUTH_TOKEN: ${{ secrets.SENTRY_AUTH_TOKEN }}
+          SENTRY_AUTH_TOKEN: ${{ secrets.SENTRY_AUTH_TOKEN }}
         run: pnpm i && cd gui && pnpm run build
       - name: Tar GUI Dist
         run: tar -czf slimevr-gui-dist.tar.gz -C gui/out .
@@ -155,7 +157,13 @@ jobs:
 
   package-desktop:
     name: Package Desktop (${{ matrix.platform }} - ${{ matrix.os }})
-    needs: [setup-matrix, build-server-jar, build-gui-frontend, build-bindings-provider]
+    needs:
+      [
+        setup-matrix,
+        build-server-jar,
+        build-gui-frontend,
+        build-bindings-provider,
+      ]
     strategy:
       fail-fast: false
       matrix: ${{ fromJson(needs.setup-matrix.outputs.matrix) }}

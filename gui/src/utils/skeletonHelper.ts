@@ -146,7 +146,10 @@ export class BoneKind extends Bone {
     const parent = BoneKind.parent(this.boneT.bodyPart);
     const parentBone = parent === null ? undefined : bones.get(parent);
     if (this.boneT.bodyPart === BoneKind.root) {
-      this.position.set(0, this.boneT.headPositionG?.y ?? 0, 0);
+      // Preserve the complete HMD position. Descendant bones are calculated
+      // from global-position deltas, so dropping the root X/Z translation
+      // incorrectly pushes the torso and legs when the headset moves.
+      this.position.copy(Vector3FromVec3fT(this.boneT.headPositionG));
       return;
     }
 

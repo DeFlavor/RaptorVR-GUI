@@ -382,7 +382,7 @@ export function ScaledProportionsPage() {
   return (
     <div
       className={classNames(
-        'flex gap-2 w-full h-full relative justify-center z-10',
+        'raptor-proportions flex gap-2 w-full h-full relative justify-center z-10',
         {
           'p-4': !state.alonePage,
           'bg-background-70': state.alonePage,
@@ -394,7 +394,11 @@ export function ScaledProportionsPage() {
         onClose={() => setResetModal(null)}
         accept={acceptHeight}
       />
-      <div className="h-full max-w-2xl w-full flex flex-col justify-end xs:py-2 z-10 xs:gap-2 pointer-events-none">
+      <div className="raptor-proportions__label" aria-hidden="true">
+        <span>BODY GEOMETRY</span>
+        <strong>LIVE SCALE LAB</strong>
+      </div>
+      <div className="raptor-proportions__controls h-full max-w-2xl w-full flex flex-col justify-end xs:py-2 z-10 xs:gap-2 pointer-events-none">
         {!auto && (
           <div className="p-0 xs:p-2">
             <Localized id="onboarding-user_height-manual-tip">
@@ -413,7 +417,7 @@ export function ScaledProportionsPage() {
 
         <div
           className={classNames(
-            'flex flex-col gap-3 p-4 bg-background-60 rounded-b-lg xs:rounded-t-lg pointer-events-auto',
+            'raptor-proportions__control-card flex flex-col gap-3 p-4 bg-background-60 rounded-b-lg xs:rounded-t-lg pointer-events-auto',
             { 'rounded-t-lg': !auto }
           )}
         >
@@ -484,7 +488,7 @@ export function ScaledProportionsPage() {
           </div>
         </div>
       </div>
-      <div className="absolute top-0 left-0 w-full h-full">
+      <div className="raptor-proportions__visual absolute top-0 left-0 w-full h-full">
         <SkeletonVisualizerWidget
           onInit={(context) => {
             context.addView({

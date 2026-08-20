@@ -16,9 +16,12 @@ export function MountingChoose() {
 
   return (
     <>
-      <div className="flex flex-col gap-5 h-full items-center w-full xs:justify-center relative overflow-y-auto px-4 pb-4">
-        <div className="flex flex-col gap-8 justify-center">
+      <div className="raptor-mounting flex flex-col gap-5 h-full items-center w-full xs:justify-center relative overflow-y-auto px-4 pb-4">
+        <div className="flex flex-col gap-8 justify-center raptor-mounting__content">
           <div className="xs:w-10/12 xs:max-w-[666px]">
+            <div className="raptor-mounting__eyebrow">
+              ORIENTATION LAB / CALIBRATION
+            </div>
             <Typography variant="main-title">
               {l10n.getString('onboarding-choose_mounting')}
             </Typography>
@@ -33,11 +36,17 @@ export function MountingChoose() {
           >
             <div
               className={classNames(
-                'rounded-lg p-4 flex relative',
+                'raptor-mounting-card raptor-mounting-card--auto rounded-lg p-5 flex relative',
                 !state.alonePage && 'bg-background-70',
                 state.alonePage && 'bg-background-60'
               )}
             >
+              <span className="raptor-mounting-card__index" aria-hidden="true">
+                01
+              </span>
+              <div className="raptor-calibration-beacon" aria-hidden="true">
+                <img src="/images/raptorvr-mark.png" alt="" />
+              </div>
               <div className="bg-accent-background-30 absolute -left-4 -top-5 p-1.5 rounded-lg">
                 <Typography variant="vr-accessible" italic>
                   {l10n.getString(
@@ -79,20 +88,17 @@ export function MountingChoose() {
             </div>
             <div
               className={classNames(
-                'rounded-lg p-4 flex flex-row relative',
+                'raptor-mounting-card raptor-mounting-card--manual rounded-lg p-5 flex flex-row relative',
                 !state.alonePage && 'bg-background-70',
                 state.alonePage && 'bg-background-60'
               )}
             >
+              <span className="raptor-mounting-card__index" aria-hidden="true">
+                02
+              </span>
               <div className="flex flex-col gap-4">
                 <div className="flex flex-grow flex-col gap-4 max-w-sm">
                   <div>
-                    <div
-                      className="raptor-calibration-beacon"
-                      aria-hidden="true"
-                    >
-                      <img src="/images/raptorvr-mark.png" alt="" />
-                    </div>
                     <Typography variant="main-title" bold>
                       {l10n.getString(
                         'onboarding-choose_mounting-manual_mounting'

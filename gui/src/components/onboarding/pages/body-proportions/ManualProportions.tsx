@@ -426,8 +426,15 @@ export function ManualProportionsPage() {
 
   return (
     <>
-      <div className="flex w-full h-full gap-2 bg-background-70 p-2">
-        <div className="flex flex-col flex-grow gap-2">
+      <div className="raptor-manual-proportions flex w-full h-full gap-2 bg-background-70 p-2">
+        <div className="raptor-manual-proportions__editor flex flex-col flex-grow gap-2">
+          <div
+            className="raptor-proportions__label raptor-proportions__label--manual"
+            aria-hidden="true"
+          >
+            <span>BODY GEOMETRY</span>
+            <strong>PRECISION EDITOR</strong>
+          </div>
           <div className="flex gap-2">
             <Localized id="onboarding-manual_proportions-back-scaled">
               <ArrowLink
@@ -440,7 +447,7 @@ export function ManualProportionsPage() {
             </Localized>
           </div>
           <ButtonsControl control={control} />
-          <div className="bg-background-60 h-20 rounded-md flex-grow overflow-y-auto">
+          <div className="raptor-manual-proportions__list bg-background-60 h-20 rounded-md flex-grow overflow-y-auto">
             <BodyProportions
               precise={precise ?? defaultValues.precise}
               type={ratio ? 'ratio' : 'linear'}
@@ -448,7 +455,7 @@ export function ManualProportionsPage() {
             />
           </div>
         </div>
-        <div className="rounded-md overflow-clip w-1/3 bg-background-60 hidden mobile:hidden sm:flex relative">
+        <div className="raptor-manual-proportions__visual rounded-md overflow-clip w-1/3 bg-background-60 hidden mobile:hidden sm:flex relative">
           <SkeletonVisualizerWidget
             onInit={(context) => {
               context.addView({

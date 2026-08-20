@@ -650,6 +650,250 @@ body {
   border-radius: 10px;
 }
 
+.raptor-assignment {
+  background:
+    radial-gradient(
+      circle at 73% 42%,
+      rgba(46, 211, 255, 0.1),
+      transparent 26%
+    ),
+    transparent;
+}
+
+.raptor-assignment__controls {
+  padding: 18px;
+  border: 1px solid rgba(244, 244, 241, 0.1);
+  border-radius: 18px;
+  background: rgba(3, 3, 3, 0.38);
+  box-shadow: 0 24px 60px rgba(0, 0, 0, 0.18);
+}
+
+.raptor-assignment__eyebrow,
+.raptor-assignment__stage-meta span,
+.raptor-mounting__eyebrow,
+.raptor-proportions__label span {
+  color: rgb(var(--accent-background-20));
+  font-size: 8px;
+  font-weight: 760;
+  letter-spacing: 0.17em;
+}
+
+.raptor-assignment__stage {
+  position: relative;
+  min-width: 0;
+  overflow: hidden;
+  border: 1px solid rgba(244, 244, 241, 0.1);
+  border-radius: 22px;
+  background:
+    linear-gradient(rgba(46, 211, 255, 0.035) 1px, transparent 1px),
+    linear-gradient(90deg, rgba(46, 211, 255, 0.035) 1px, transparent 1px),
+    radial-gradient(circle at 50% 44%, rgba(0, 82, 255, 0.11), transparent 46%),
+    rgba(3, 3, 3, 0.28);
+  background-size:
+    28px 28px,
+    28px 28px,
+    auto,
+    auto;
+}
+
+.raptor-assignment__stage-meta {
+  position: absolute;
+  z-index: 15;
+  top: 16px;
+  left: 18px;
+  right: 18px;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  pointer-events: none;
+}
+
+.raptor-assignment__stage-meta strong {
+  color: rgb(var(--background-10));
+  font-size: 12px;
+  letter-spacing: 0.08em;
+}
+
+.raptor-body-map__figure::before,
+.raptor-body-map__figure::after {
+  content: '';
+  position: absolute;
+  z-index: -1;
+  left: 50%;
+  top: 50%;
+  border-radius: 50%;
+  transform: translate(-50%, -50%);
+  pointer-events: none;
+}
+
+.raptor-body-map__figure::before {
+  width: min(420px, 90%);
+  aspect-ratio: 1;
+  border: 1px solid rgba(46, 211, 255, 0.16);
+  box-shadow: 0 0 80px rgba(0, 82, 255, 0.11);
+}
+
+.raptor-body-map__figure::after {
+  width: min(320px, 72%);
+  aspect-ratio: 1;
+  border: 1px dashed rgba(136, 76, 255, 0.18);
+}
+
+.raptor-assignment-mascot {
+  width: auto;
+  height: 100%;
+  max-width: 100%;
+  overflow: visible;
+  filter: drop-shadow(0 0 18px rgba(46, 211, 255, 0.15));
+}
+
+.raptor-body-map__dot {
+  outline: 2px solid rgba(3, 3, 3, 0.8);
+  box-shadow:
+    0 0 0 2px rgba(46, 211, 255, 0.17),
+    0 0 12px rgba(46, 211, 255, 0.42) !important;
+}
+
+.raptor-mounting,
+.raptor-calibration-flow,
+.raptor-manual-mounting,
+.raptor-proportions,
+.raptor-manual-proportions {
+  background:
+    radial-gradient(
+      circle at 84% 12%,
+      rgba(136, 76, 255, 0.12),
+      transparent 30%
+    ),
+    linear-gradient(rgba(46, 211, 255, 0.025) 1px, transparent 1px),
+    linear-gradient(90deg, rgba(46, 211, 255, 0.025) 1px, transparent 1px);
+  background-size:
+    auto,
+    30px 30px,
+    30px 30px;
+}
+
+.raptor-mounting__content {
+  width: min(900px, 100%);
+}
+.raptor-mounting__eyebrow {
+  margin-bottom: 8px;
+}
+
+.raptor-mounting-card {
+  min-height: 310px;
+  isolation: isolate;
+  overflow: hidden;
+  border: 1px solid rgba(244, 244, 241, 0.11);
+  border-radius: 20px;
+  background: rgba(3, 3, 3, 0.45) !important;
+  box-shadow: 0 24px 60px rgba(0, 0, 0, 0.18);
+  transition:
+    border-color 180ms ease,
+    transform 180ms ease;
+}
+
+.raptor-mounting-card:hover {
+  border-color: rgba(46, 211, 255, 0.36);
+  transform: translateY(-3px);
+}
+
+.raptor-mounting-card--auto {
+  background: linear-gradient(
+    145deg,
+    rgba(0, 82, 255, 0.14),
+    rgba(3, 3, 3, 0.44)
+  ) !important;
+}
+
+.raptor-mounting-card__index {
+  position: absolute;
+  z-index: -1;
+  right: 10px;
+  bottom: -24px;
+  color: rgba(244, 244, 241, 0.045);
+  font-size: 142px;
+  font-weight: 850;
+  line-height: 1;
+  letter-spacing: -0.1em;
+}
+
+.raptor-calibration-flow__content {
+  padding: 26px;
+  border: 1px solid rgba(244, 244, 241, 0.1);
+  border-radius: 22px;
+  background: rgba(3, 3, 3, 0.36);
+  box-shadow: 0 24px 70px rgba(0, 0, 0, 0.2);
+}
+
+.raptor-manual-mounting__controls {
+  padding: 22px;
+  border: 1px solid rgba(244, 244, 241, 0.1);
+  border-radius: 18px;
+  background: rgba(3, 3, 3, 0.4);
+}
+
+.raptor-manual-mounting__map {
+  min-width: min(660px, 58vw);
+  height: min(760px, 82vh);
+  padding: 18px;
+  border: 1px solid rgba(46, 211, 255, 0.14);
+  border-radius: 22px;
+  background: rgba(3, 3, 3, 0.22);
+}
+
+.raptor-proportions__label {
+  position: absolute;
+  z-index: 20;
+  top: 20px;
+  left: 22px;
+  display: grid;
+  gap: 3px;
+  pointer-events: none;
+}
+
+.raptor-proportions__label strong {
+  color: rgb(var(--background-10));
+  font-size: 15px;
+  letter-spacing: 0.03em;
+}
+
+.raptor-proportions__control-card {
+  border: 1px solid rgba(244, 244, 241, 0.12);
+  border-radius: 18px !important;
+  background: rgba(3, 3, 3, 0.78) !important;
+  box-shadow: 0 22px 55px rgba(0, 0, 0, 0.26);
+  backdrop-filter: blur(16px);
+}
+
+.raptor-proportions__visual::after,
+.raptor-manual-proportions__visual::after {
+  content: '';
+  position: absolute;
+  inset: 0;
+  z-index: 0;
+  border: 1px solid rgba(46, 211, 255, 0.1);
+  border-radius: inherit;
+  pointer-events: none;
+}
+
+.raptor-manual-proportions__editor {
+  position: relative;
+  padding-top: 56px;
+}
+
+.raptor-proportions__label--manual {
+  top: 10px;
+  left: 12px;
+}
+
+.raptor-manual-proportions__list,
+.raptor-manual-proportions__visual {
+  border: 1px solid rgba(244, 244, 241, 0.1);
+  border-radius: 16px;
+  background: rgba(3, 3, 3, 0.35) !important;
+}
+
 @keyframes raptor-scan-spin {
   to {
     transform: rotate(360deg);
@@ -706,6 +950,37 @@ body {
   }
   .raptor-onboarding-panel {
     padding: 26px 22px 30px;
+  }
+  .raptor-assignment__controls {
+    padding: 14px;
+  }
+  .raptor-assignment__stage {
+    min-height: 640px;
+  }
+  .raptor-assignment__stage-meta {
+    top: 10px;
+  }
+  .raptor-mounting-card {
+    min-height: 265px;
+  }
+  .raptor-calibration-flow__content {
+    padding: 18px;
+  }
+  .raptor-manual-mounting__map {
+    min-width: 0;
+    width: 100%;
+    height: 650px;
+    padding: 8px;
+  }
+  .raptor-proportions__label {
+    top: 12px;
+    left: 14px;
+  }
+  .raptor-proportions__controls {
+    padding-top: 56px;
+  }
+  .raptor-manual-proportions__editor {
+    padding-top: 54px;
   }
 }
 

@@ -12,7 +12,6 @@ import { MaximiseIcon } from './commons/icon/MaximiseIcon';
 import { MinimiseIcon } from './commons/icon/MinimiseIcon';
 import { RaptorMarkIcon } from './commons/icon/RaptorMarkIcon';
 import { ProgressBar } from './commons/ProgressBar';
-import { Typography } from './commons/Typography';
 import { DownloadIcon } from './commons/icon/DownloadIcon';
 import { DOCS_SITE, GH_REPO, VersionContext } from '@/App';
 import classNames from 'classnames';

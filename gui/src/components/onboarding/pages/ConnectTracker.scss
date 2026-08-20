@@ -24,3 +24,113 @@
       / 100%;
   }
 }
+
+.raptor-connect {
+  overflow: hidden;
+  background:
+    radial-gradient(circle at 78% 12%, rgba(0, 82, 255, 0.14), transparent 34%),
+    linear-gradient(90deg, rgba(46, 211, 255, 0.025) 1px, transparent 1px),
+    linear-gradient(rgba(46, 211, 255, 0.025) 1px, transparent 1px);
+  background-size:
+    auto,
+    28px 28px,
+    28px 28px;
+}
+
+.raptor-connect__guide {
+  border-right: 1px solid rgba(244, 244, 241, 0.11);
+  background: rgba(3, 3, 3, 0.38);
+}
+
+.raptor-connect__eyebrow,
+.raptor-connect__deck-title span,
+.raptor-connect__steps span {
+  color: rgb(var(--accent-background-20));
+  font-size: 8px;
+  font-weight: 750;
+  letter-spacing: 0.16em;
+}
+
+.raptor-connect__eyebrow {
+  margin-bottom: 8px;
+}
+
+.raptor-connect__steps {
+  margin-top: 18px;
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 5px;
+}
+
+.raptor-connect__steps span {
+  padding: 8px 6px;
+  border-top: 2px solid rgba(244, 244, 241, 0.12);
+  color: rgb(var(--background-40));
+}
+
+.raptor-connect__steps span.is-active,
+.raptor-connect__steps span.is-complete {
+  border-color: #2ed3ff;
+  color: rgb(var(--background-10));
+}
+
+.raptor-connect__status {
+  align-items: center;
+  border: 1px solid rgba(46, 211, 255, 0.2);
+  border-radius: 16px;
+  background: linear-gradient(
+    135deg,
+    rgba(0, 82, 255, 0.12),
+    rgba(3, 3, 3, 0.44)
+  );
+  box-shadow: 0 18px 45px rgba(0, 0, 0, 0.2);
+}
+
+.raptor-connect__signal {
+  width: 72px;
+  height: 72px;
+}
+
+.raptor-connect__deck-title {
+  min-height: 66px;
+  border-bottom: 1px solid rgba(244, 244, 241, 0.09);
+}
+
+.raptor-connect__deck-title > div {
+  display: grid;
+  gap: 5px;
+}
+
+.raptor-connect__deck-title strong {
+  color: rgb(var(--background-10));
+  font-size: 34px;
+  line-height: 1;
+  letter-spacing: -0.07em;
+}
+
+.raptor-connect__tracker-grid > div {
+  border: 1px solid rgba(244, 244, 241, 0.08);
+  border-radius: 14px;
+  background: rgba(3, 3, 3, 0.24);
+  transition:
+    border-color 160ms ease,
+    transform 160ms ease;
+}
+
+.raptor-connect__tracker-grid > div:hover {
+  border-color: rgba(46, 211, 255, 0.35);
+  transform: translateY(-1px);
+}
+
+@screen mobile {
+  .raptor-connect {
+    overflow-y: auto;
+  }
+  .raptor-connect__guide {
+    border-right: 0;
+    border-bottom: 1px solid rgba(244, 244, 241, 0.11);
+  }
+  .raptor-connect__deck-title {
+    padding-top: 14px;
+  }
+}

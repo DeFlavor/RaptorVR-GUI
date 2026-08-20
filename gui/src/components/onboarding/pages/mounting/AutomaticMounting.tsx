@@ -27,9 +27,12 @@ export function AutomaticMountingPage() {
 
   return (
     <>
-      <div className="flex flex-col gap-2 h-full items-center w-full xs:justify-center relative overflow-y-auto overflow-x-hidden px-4 pb-4">
-        <div className="flex flex-col w-full h-full xs:justify-center xs:max-w-3xl gap-5">
+      <div className="raptor-calibration-flow flex flex-col gap-2 h-full items-center w-full xs:justify-center relative overflow-y-auto overflow-x-hidden px-4 pb-4">
+        <div className="flex flex-col w-full h-full xs:justify-center xs:max-w-3xl gap-5 raptor-calibration-flow__content">
           <div className="flex flex-col xs:max-w-lg gap-3">
+            <div className="raptor-mounting__eyebrow">
+              AUTOMATIC ALIGNMENT / GUIDED SEQUENCE
+            </div>
             <Typography variant="main-title">
               {l10n.getString('onboarding-automatic_mounting-title')}
             </Typography>

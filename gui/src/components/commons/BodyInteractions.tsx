@@ -101,8 +101,10 @@ export function BodyInteractions({
     canvasRefRef.current.width = canvasRefRef.current.clientWidth;
     canvasRefRef.current.height = canvasRefRef.current.clientHeight;
 
-    ctx.strokeStyle = '#608AAB';
-    ctx.lineWidth = 2;
+    ctx.strokeStyle = '#2ed3ff';
+    ctx.lineWidth = 1.5;
+    ctx.shadowColor = 'rgba(46, 211, 255, 0.42)';
+    ctx.shadowBlur = 7;
 
     const canvasBox = canvasRefRef.current.getBoundingClientRect();
     const personBox = personRef.current.getBoundingClientRect();
@@ -191,7 +193,7 @@ export function BodyInteractions({
   }, []);
 
   return (
-    <div className="relative w-full h-full">
+    <div className="raptor-body-map relative w-full h-full">
       <canvas
         ref={canvasRefRef}
         className="absolute w-full h-full top-0 z-10"
@@ -204,7 +206,9 @@ export function BodyInteractions({
         </div>
         <div
           ref={personRef}
-          className={classNames('relative flex justify-center flex-grow')}
+          className={classNames(
+            'raptor-body-map__figure relative flex justify-center flex-grow'
+          )}
         >
           <PersonFrontIcon mirror={mirror} />
           {slotsButtonsPos.map(
@@ -236,7 +240,7 @@ export function BodyInteractions({
                   <div
                     className={classNames(
                       'absolute rounded-full outline-background-90 transition-opacity',
-                      'hover:bg-accent-background-40',
+                      'raptor-body-map__dot hover:bg-accent-background-40',
                       assignedRoles.includes((BodyPart as any)[id])
                         ? 'bg-status-success'
                         : 'bg-background-10',

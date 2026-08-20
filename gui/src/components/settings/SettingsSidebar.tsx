@@ -30,8 +30,9 @@ export function SettingsLink({
     <NavLink
       to={to}
       state={{ scrollTo }}
-      className={classNames('pl-5 py-2 hover:bg-background-60 rounded-lg', {
+      className={classNames('raptor-settings-link pl-5 py-2 rounded-lg', {
         'bg-background-60': isActive,
+        'is-active': isActive,
       })}
     >
       <Typography id={id} />
@@ -43,9 +44,15 @@ export function SettingsSidebar() {
   const { state: vrcConfigState } = useVRCConfig();
 
   return (
-    <div className="flex flex-col px-5 py-5 gap-3 overflow-y-auto bg-background-70 rounded-lg h-full">
-      <Typography variant="main-title" id="settings-sidebar-title" />
-      <div className="flex flex-col gap-3">
+    <div className="raptor-settings-sidebar flex flex-col px-4 py-4 gap-4 overflow-y-auto bg-background-70 rounded-lg h-full">
+      <div className="raptor-settings-sidebar__brand">
+        <img src="/images/raptorvr-mark.png" alt="" aria-hidden="true" />
+        <div>
+          <span>RAPTOR CONTROL</span>
+          <Typography variant="main-title" id="settings-sidebar-title" />
+        </div>
+      </div>
+      <div className="raptor-settings-group flex flex-col gap-3">
         <Typography variant="section-title" id="settings-sidebar-general" />
         <div className="flex flex-col gap-2">
           <SettingsLink
@@ -75,7 +82,7 @@ export function SettingsSidebar() {
           />
         </div>
       </div>
-      <div className="flex flex-col gap-3">
+      <div className="raptor-settings-group flex flex-col gap-3">
         <Typography variant="section-title" id="settings-sidebar-interface" />
         <div className="flex flex-col gap-2">
           <SettingsLink
@@ -104,7 +111,7 @@ export function SettingsSidebar() {
             id="settings-sidebar-checklist"
           />
         </div>
-        <div className="flex flex-col gap-3">
+        <div className="raptor-settings-group flex flex-col gap-3">
           <Typography variant="section-title">OSC</Typography>
           <div className="flex flex-col gap-2">
             <SettingsLink
@@ -124,14 +131,10 @@ export function SettingsSidebar() {
             />
           </div>
         </div>
-        <div className="flex flex-col gap-3">
+        <div className="raptor-settings-group flex flex-col gap-3">
           <Typography variant="section-title" id="settings-sidebar-utils" />
           <div className="flex flex-col gap-2">
             <SettingsLink to="/settings/serial" id="settings-sidebar-serial" />
-            <SettingsLink
-              to="/settings/firmware-tool"
-              id="settings-sidebar-firmware-tool"
-            />
             <SettingsLink to="/onboarding/home" id="navbar-onboarding" />
             {vrcConfigState?.isSupported && (
               <SettingsLink

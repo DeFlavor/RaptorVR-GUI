@@ -99,9 +99,12 @@ export function ManualMountingPage() {
         onClose={() => setSelectRole(BodyPart.NONE)}
         onDirectionSelected={onDirectionSelected}
       />
-      <div className="flex flex-col gap-5 h-full items-center w-full xs:justify-center relative overflow-y-auto">
+      <div className="raptor-manual-mounting flex flex-col gap-5 h-full items-center w-full xs:justify-center relative overflow-y-auto">
         <div className="flex xs:flex-row mobile:flex-col h-full px-8 xs:w-full xs:justify-center mobile:px-4 items-center">
-          <div className="flex flex-col w-full xs:max-w-sm gap-3">
+          <div className="raptor-manual-mounting__controls flex flex-col w-full xs:max-w-sm gap-3">
+            <div className="raptor-mounting__eyebrow">
+              MANUAL ALIGNMENT / TRACKER BY TRACKER
+            </div>
             <Typography variant="main-title" id="onboarding-manual_mounting" />
             <Typography id="onboarding-manual_mounting-description" />
             <Typography id="tips-find_tracker" />
@@ -125,7 +128,7 @@ export function ManualMountingPage() {
               )}
             </div>
           </div>
-          <div className="flex flex-row justify-center">
+          <div className="raptor-manual-mounting__map flex flex-row justify-center">
             <BodyAssignment
               width={isMobile ? 160 : undefined}
               mirror={config?.mirrorView ?? defaultConfig.mirrorView}

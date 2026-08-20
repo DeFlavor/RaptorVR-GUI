@@ -37,7 +37,6 @@ import { useBreakpoint } from './hooks/breakpoint';
 import { VRModePage } from './components/vr-mode/VRModePage';
 import { InterfaceSettings } from './components/settings/pages/InterfaceSettings';
 import { error, log } from './utils/logging';
-import { FirmwareToolSettings } from './components/firmware-tool/FirmwareTool';
 import { AppLayout } from './AppLayout';
 import { Preload } from './components/Preload';
 import { UnknownDeviceModal } from './components/UnknownDeviceModal';
@@ -136,7 +135,6 @@ function Layout() {
               </SettingsLayout>
             }
           >
-            <Route path="firmware-tool" element={<FirmwareToolSettings />} />
             <Route path="trackers" element={<GeneralSettings />} />
             <Route path="serial" element={<Serial />} />
             <Route path="osc/router" element={<OSCRouterSettings />} />
@@ -165,7 +163,6 @@ function Layout() {
             <Route path="quiz/runtime" element={<QuizRuntimeQuestion />} />
             <Route path="quiz/mocap-pos" element={<QuizMocapPosQuestion />} />
             <Route path="dongle" element={<DonglePage />} />
-            <Route path="firmware-tool" element={<FirmwareToolSettings />} />
             <Route path="connect-trackers" element={<ConnectTrackersPage />} />
             <Route path="trackers-assign" element={<TrackersAssignPage />} />
             <Route path="mounting/choose" element={<MountingChoose />} />
