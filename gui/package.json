@@ -1,6 +1,6 @@
 {
   "name": "raptorvr-gui",
-  "version": "20.1.1",
+  "version": "20.1.2",
   "description": "Raptor VR GUI for full-body tracking setup, calibration, and live motion control",
   "author": "RaptorVR <raptorvr.contact@gmail.com>",
   "homepage": "https://raptorvr.shop",

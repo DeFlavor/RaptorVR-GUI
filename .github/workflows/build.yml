@@ -182,6 +182,27 @@ jobs:
         with:
           node-version-file: '.node-version'
           cache: 'pnpm'
+      - if: matrix.platform == 'windows'
+        name: Set up bundled Java 17 runtime
+        uses: actions/setup-java@v5
+        with:
+          distribution: 'temurin'
+          java-version: '17'
+          java-package: 'jre'
+          architecture: 'x64'
+      - if: matrix.platform == 'windows'
+        name: Stage bundled Java runtime
+        shell: pwsh
+        run: |
+          $destination = Join-Path $env:GITHUB_WORKSPACE 'gui/electron/resources/jre'
+          New-Item -ItemType Directory -Path $destination -Force | Out-Null
+          Copy-Item -Path (Join-Path $env:JAVA_HOME '*') -Destination $destination -Recurse -Force
+
+          $java = Join-Path $destination 'bin/java.exe'
+          if (-not (Test-Path -LiteralPath $java)) {
+            throw 'Bundled Java executable was not staged'
+          }
+          & $java --version
       - name: Download Server Jar
         uses: actions/download-artifact@v8
         with:
@@ -218,6 +239,26 @@ jobs:
             ${{ matrix.platform == 'macos' && '--universal' || '' }} \
             --config.extraMetadata.version="$VERSION" \
             --publish never
+      - if: matrix.platform == 'windows'
+        name: Validate bundled Java runtime
+        shell: pwsh
+        run: |
+          $unpacked = Join-Path $env:GITHUB_WORKSPACE 'gui/dist/artifacts/win/win-unpacked'
+          $java = Join-Path $unpacked 'jre/bin/java.exe'
+          $probe = Get-ChildItem -Path (Join-Path $unpacked 'resources/app.asar.unpacked/out/main/chunks') -Filter 'JavaVersion-*.jar' | Select-Object -First 1
+
+          if (-not (Test-Path -LiteralPath $java)) {
+            throw 'Packaged application does not contain Java'
+          }
+          if (-not $probe) {
+            throw 'Packaged application does not contain the Java version probe'
+          }
+
+          $version = & $java -jar $probe.FullName
+          if ($LASTEXITCODE -ne 0 -or [double]$version -lt 17) {
+            throw "Packaged Java validation failed: $version"
+          }
+          Write-Output "Validated bundled Java $version"
       - name: Collect Release Artifacts
         shell: bash
         run: |

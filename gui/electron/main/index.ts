@@ -402,11 +402,14 @@ const spawnServer = async () => {
   const sharedDir = dirname(serverJar);
   const javaBin = await findSystemJRE(sharedDir);
   if (!javaBin) {
-    dialog.showErrorBox(
-      'Raptor VR GUI',
-      `Couldn't find a compatible Java version, please download Java 17 or higher`
+    logger.error(
+      { sharedDir },
+      'Bundled Java 17 runtime is missing or could not be started'
     );
-    app.quit();
+    dialog.showErrorBox(
+      'Raptor VR GUI needs repair',
+      'A built-in tracking component is missing or damaged. Reinstall the latest Raptor VR GUI—you do not need to install Java separately.'
+    );
     return;
   }
 
