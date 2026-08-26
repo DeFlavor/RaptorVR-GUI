@@ -204,7 +204,10 @@ jobs:
           }
           & $java --version
       - if: matrix.platform == 'windows'
-        name: Stage RaptorVR SteamVR driver
+        name: Set up OpenVR driver build tools
+        uses: lukka/get-cmake@latest
+      - if: matrix.platform == 'windows'
+        name: Build native RaptorVR OpenVR driver
         shell: pwsh
         run: ./tools/prepare-steamvr-driver.ps1
       - name: Download Server Jar
@@ -263,6 +266,50 @@ jobs:
             throw "Packaged Java validation failed: $version"
           }
           Write-Output "Validated bundled Java $version"
+      - if: matrix.platform == 'windows'
+        name: Validate bundled RaptorVR OpenVR driver
+        shell: pwsh
+        run: |
+          $driver = Join-Path $env:GITHUB_WORKSPACE 'gui/dist/artifacts/win/win-unpacked/raptorvr-openvr-driver-win64'
+          $manifest = Get-Content -LiteralPath (Join-Path $driver 'driver.vrdrivermanifest') -Raw | ConvertFrom-Json
+          $dll = Join-Path $driver 'bin/win64/driver_raptorvr.dll'
+          $profile = Join-Path $driver 'resources/input/raptorvr_tracker_profile.json'
+          $model = Join-Path $driver 'resources/rendermodels/raptorvr_tracker/raptorvr_tracker.json'
+
+          if ($manifest.name -ne 'raptorvr') {
+            throw "Unexpected OpenVR driver name: $($manifest.name)"
+          }
+          foreach ($requiredFile in @($dll, $profile, $model)) {
+            if (-not (Test-Path -LiteralPath $requiredFile)) {
+              throw "Packaged RaptorVR OpenVR driver is missing $requiredFile"
+            }
+          }
+          Write-Output "Validated native RaptorVR OpenVR driver: $dll"
+      - if: matrix.platform == 'windows'
+        name: Validate MSI installer and update payload
+        shell: pwsh
+        run: |
+          $artifacts = Join-Path $env:GITHUB_WORKSPACE 'gui/dist/artifacts/win'
+          $msi = Get-ChildItem -LiteralPath $artifacts -Filter 'Raptor-VR-GUI-Windows-*.msi'
+          $updater = Get-ChildItem -LiteralPath $artifacts -Filter 'Raptor-VR-GUI-Windows-*.exe'
+          $metadata = Join-Path $artifacts 'latest.yml'
+
+          if ($msi.Count -ne 1) {
+            throw "Expected one MSI installer, found $($msi.Count)"
+          }
+          if ($updater.Count -ne 1) {
+            throw "Expected one automatic-update payload, found $($updater.Count)"
+          }
+          if (-not (Test-Path -LiteralPath $metadata)) {
+            throw 'Windows automatic-update metadata was not generated'
+          }
+
+          $updateMetadata = Get-Content -LiteralPath $metadata -Raw
+          if ($updateMetadata -notmatch [regex]::Escape($updater.Name)) {
+            throw "Windows update metadata does not reference $($updater.Name)"
+          }
+          Write-Output "Validated public MSI installer: $($msi.Name)"
+          Write-Output "Validated internal automatic-update payload: $($updater.Name)"
       - name: Collect Release Artifacts
         shell: bash
         run: |

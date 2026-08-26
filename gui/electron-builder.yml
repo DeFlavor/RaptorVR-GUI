@@ -71,6 +71,8 @@ win:
   artifactName: 'Raptor-VR-GUI-Windows-${arch}.${ext}'
   target:
     - target: nsis
+    # electron-builder's runtime target identifier is `msiwrapped`.
+    - target: msiwrapped
     - target: zip
   icon: './electron/resources/icons/icon.ico'
   extraFiles:
@@ -85,14 +87,23 @@ win:
       to: '.'
     - from: './electron/resources/jre'
       to: 'jre'
-    - from: './electron/resources/steamvr-driver/slimevr-openvr-driver-win64'
-      to: 'slimevr-openvr-driver-win64'
+    - from: './electron/resources/steamvr-driver/raptorvr-openvr-driver-win64'
+      to: 'raptorvr-openvr-driver-win64'
 
 nsis:
+  artifactName: 'Raptor-VR-GUI-Windows-${arch}.${ext}'
+  include: './electron/resources/scripts/windows-installer.nsh'
   oneClick: true
-  perMachine: false
+  perMachine: true
   allowElevation: true
   deleteAppDataOnUninstall: false
+
+msiWrapped:
+  artifactName: 'Raptor-VR-GUI-Windows-${arch}.${ext}'
+  upgradeCode: '{FA6856E5-0A29-4789-BBA8-9FEC4BF9B8B9}'
+  warningsAsErrors: false
+  impersonate: false
+  wrappedInstallerArgs: '/S /allusers'
 
 mac:
   target:
