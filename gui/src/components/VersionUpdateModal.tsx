@@ -12,6 +12,12 @@ import type { AppUpdateStatus } from '../../electron/preload/interface';
 
 const CHECK_FOR_UPDATES_EVENT = 'raptorvr-check-for-updates';
 
+function formatBytes(bytes: number) {
+  if (!Number.isFinite(bytes) || bytes <= 0) return '0 MB';
+  const precision = bytes >= 10 * 1024 * 1024 ? 0 : 1;
+  return `${(bytes / (1024 * 1024)).toFixed(precision)} MB`;
+}
+
 export function VersionUpdateModal() {
   const electron = useElectron();
   const electronApi = electron.isElectron ? electron.api : null;
@@ -19,8 +25,6 @@ export function VersionUpdateModal() {
   const newVersion = useContext(VersionContext);
   const [forceClose, setForceClose] = useState(false);
   const [manualCheck, setManualCheck] = useState(false);
-  const [updateInteractionStarted, setUpdateInteractionStarted] =
-    useState(false);
   const [updateStatus, setUpdateStatus] = useState<AppUpdateStatus>({
     state: 'idle',
   });
@@ -74,22 +78,43 @@ export function VersionUpdateModal() {
   const isElectronUpdateOpen =
     electron.isElectron &&
     (manualCheck ||
-      updateInteractionStarted ||
+      updateStatus.state === 'checking' ||
+      updateStatus.state === 'available' ||
       updateStatus.state === 'downloading' ||
       updateStatus.state === 'downloaded' ||
-      (updateStatus.state === 'available' && isVersionNew));
+      updateStatus.state === 'error');
   const isWebUpdateOpen = !electron.isElectron && !!newVersion && isVersionNew;
+
+  const title = useMemo(() => {
+    switch (updateStatus.state) {
+      case 'checking':
+        return 'Checking for updates';
+      case 'available':
+      case 'downloading':
+        return 'Updating Raptor VR GUI';
+      case 'downloaded':
+        return 'Update downloaded';
+      case 'not-available':
+        return 'Raptor VR GUI is up to date';
+      case 'error':
+        return 'Automatic update needs attention';
+      default:
+        return l10n.getString('version_update-title', {
+          version: displayedVersion,
+        });
+    }
+  }, [displayedVersion, l10n, updateStatus.state]);
 
   const description = useMemo(() => {
     switch (updateStatus.state) {
       case 'checking':
-        return 'Checking the RaptorVR release channel…';
+        return 'Checking for the newest official RaptorVR app...';
       case 'available':
-        return 'Download this release securely and install it without leaving Raptor VR GUI.';
+        return 'A newer version was found. The download is starting automatically.';
       case 'downloading':
-        return `Downloading update… ${Math.round(updateStatus.percent)}%`;
+        return `Downloading update... ${Math.round(updateStatus.percent)}% (${formatBytes(updateStatus.transferred)} of ${formatBytes(updateStatus.total)})`;
       case 'downloaded':
-        return 'The update is ready. Restart Raptor VR GUI to finish installing it.';
+        return 'The update is ready. Raptor VR GUI will restart and install it automatically.';
       case 'not-available':
         return `You already have the newest Raptor VR GUI release (${updateStatus.version}).`;
       case 'unsupported':
@@ -108,8 +133,6 @@ export function VersionUpdateModal() {
     }
 
     if (updateStatus.state === 'available') {
-      setUpdateInteractionStarted(true);
-      await electron.api.downloadUpdate();
       return;
     }
     if (updateStatus.state === 'downloaded') {
@@ -129,19 +152,21 @@ export function VersionUpdateModal() {
   const primaryLabel = !electron.isElectron
     ? l10n.getString('version_update-update')
     : updateStatus.state === 'available'
-      ? 'Download update'
+      ? 'Starting download...'
       : updateStatus.state === 'downloaded'
-        ? 'Restart and install'
+        ? 'Restart now'
         : updateStatus.state === 'error' || updateStatus.state === 'unsupported'
           ? 'Open download page'
           : updateStatus.state === 'checking' ||
               updateStatus.state === 'downloading'
-            ? 'Please wait…'
+            ? 'Updating automatically...'
             : 'Done';
 
   const isBusy =
     electron.isElectron &&
-    (updateStatus.state === 'checking' || updateStatus.state === 'downloading');
+    (updateStatus.state === 'checking' ||
+      updateStatus.state === 'available' ||
+      updateStatus.state === 'downloading');
 
   return (
     <BaseModal
@@ -152,32 +177,29 @@ export function VersionUpdateModal() {
         <>
           <div className="flex flex-col items-center gap-3 fill-accent-background-20">
             <div className="flex flex-col items-center gap-2">
-              <Typography variant="main-title">
-                {updateStatus.state === 'not-available'
-                  ? 'Raptor VR GUI is up to date'
-                  : updateStatus.state === 'downloaded'
-                    ? 'Update ready to install'
-                    : l10n.getString('version_update-title', {
-                        version: displayedVersion,
-                      })}
-              </Typography>
+              <Typography variant="main-title">{title}</Typography>
               <Typography variant="standard">{description}</Typography>
             </div>
           </div>
 
           {updateStatus.state === 'downloading' && (
-            <div
-              className="h-2 overflow-hidden rounded-full bg-background-60"
-              role="progressbar"
-              aria-label="Update download progress"
-              aria-valuemin={0}
-              aria-valuemax={100}
-              aria-valuenow={Math.round(updateStatus.percent)}
-            >
+            <div className="flex flex-col gap-2">
               <div
-                className="h-full bg-accent-background-20 transition-[width] duration-300"
-                style={{ width: `${updateStatus.percent}%` }}
-              />
+                className="h-2 overflow-hidden rounded-full bg-background-60"
+                role="progressbar"
+                aria-label="Update download progress"
+                aria-valuemin={0}
+                aria-valuemax={100}
+                aria-valuenow={Math.round(updateStatus.percent)}
+              >
+                <div
+                  className="h-full bg-accent-background-20 transition-[width] duration-300"
+                  style={{ width: `${updateStatus.percent}%` }}
+                />
+              </div>
+              <Typography variant="standard">
+                Your tracker setup, calibration, and app settings stay saved.
+              </Typography>
             </div>
           )}
 

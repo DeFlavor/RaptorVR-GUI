@@ -1,8 +1,18 @@
 import classNames from 'classnames';
-import { ReactNode, useEffect, useRef, useState } from 'react';
+import { ReactNode, useCallback, useEffect, useRef, useState } from 'react';
 import { BodyPart } from 'solarxr-protocol';
 import { PersonFrontIcon } from './PersonFrontIcon';
 import { useBreakpoint } from '@/hooks/breakpoint';
+
+function getOffset(el: Element, offset = { left: 0, top: 0 }) {
+  const rect = el.getBoundingClientRect();
+  return {
+    left: rect.left - (offset.left || 0),
+    top: rect.top - (offset.top || 0),
+    width: rect.width || (el as HTMLElement).offsetWidth,
+    height: rect.height || (el as HTMLElement).offsetHeight,
+  };
+}
 
 export function BodyInteractions({
   leftControls,
@@ -29,12 +39,6 @@ export function BodyInteractions({
   const personRef = useRef<HTMLDivElement | null>(null);
   const leftContainerRef = useRef<HTMLDivElement | null>(null);
   const rightContainerRef = useRef<HTMLDivElement | null>(null);
-  const mutationObserverRef = useRef<MutationObserver>(
-    new MutationObserver(() => updateSlots())
-  );
-  const resizeObserverRef = useRef<ResizeObserver>(
-    new ResizeObserver(() => updateSlots())
-  );
   const canvasRefRef = useRef<HTMLCanvasElement | null>(null);
   const [slotsButtonsPos, setSlotsButtonPos] = useState<
     {
@@ -44,6 +48,7 @@ export function BodyInteractions({
       height: number;
       width: number;
       hidden: boolean;
+      rotation: number;
       buttonOffset: {
         left: number;
         top: number;
@@ -51,39 +56,7 @@ export function BodyInteractions({
     }[]
   >([]);
 
-  const getSlotsPos = () => {
-    return (
-      (personRef.current && [
-        ...(personRef.current.querySelectorAll('.body-part-circle') as any),
-      ]) ||
-      []
-    );
-  };
-
-  const getControlsPos = () => {
-    const pos = (container: HTMLDivElement) =>
-      [...(container.querySelectorAll('.control') as any)].filter(
-        ({ id }) => !!id
-      );
-
-    const left =
-      (leftContainerRef.current && pos(leftContainerRef.current)) || [];
-    const right =
-      (rightContainerRef.current && pos(rightContainerRef.current)) || [];
-    return [...left, ...right];
-  };
-
-  const getOffset = (el: HTMLDivElement, offset = { left: 0, top: 0 }) => {
-    const rect = el.getBoundingClientRect();
-    return {
-      left: rect.left - (offset.left || 0),
-      top: rect.top - (offset.top || 0),
-      width: rect.width || el.offsetWidth,
-      height: rect.height || el.offsetHeight,
-    };
-  };
-
-  const updateSlots = () => {
+  const updateSlots = useCallback(() => {
     if (
       !(
         personRef.current &&
@@ -95,8 +68,19 @@ export function BodyInteractions({
       return;
     const ctx = canvasRefRef.current.getContext('2d');
     if (!ctx) return;
-    const slotsPos = getSlotsPos();
-    const controlsPos = getControlsPos();
+    const slotsPos = [
+      ...personRef.current.querySelectorAll<SVGCircleElement>(
+        '.body-part-circle'
+      ),
+    ];
+    const getControls = (container: HTMLDivElement) =>
+      [...container.querySelectorAll<HTMLElement>('.control')].filter(
+        ({ id }) => !!id
+      );
+    const controlsPos = [
+      ...getControls(leftContainerRef.current),
+      ...getControls(rightContainerRef.current),
+    ];
 
     canvasRefRef.current.width = canvasRefRef.current.clientWidth;
     canvasRefRef.current.height = canvasRefRef.current.clientHeight;
@@ -110,11 +94,12 @@ export function BodyInteractions({
     const personBox = personRef.current.getBoundingClientRect();
 
     const controlsPosIds = controlsPos.map(({ id: cid }) => cid);
-    const slots = slotsPos.map((slot: HTMLDivElement) => {
+    const slots = slotsPos.map((slot) => {
       const slotPosition = getOffset(slot, canvasBox);
       return {
         ...slotPosition,
         id: slot.id,
+        rotation: Number(slot.dataset.rotation || 0),
         hidden:
           variant === 'tracker-select' && !controlsPosIds.includes(slot.id),
         buttonOffset: {
@@ -153,11 +138,11 @@ export function BodyInteractions({
       });
     }
     setSlotsButtonPos(slots);
-  };
+  }, [isMobile, variant]);
 
   useEffect(() => {
     updateSlots();
-  }, [variant]);
+  }, [leftControls, mirror, rightControls, updateSlots]);
 
   useEffect(() => {
     if (
@@ -167,36 +152,32 @@ export function BodyInteractions({
     )
       return;
 
-    resizeObserverRef.current.observe(personRef.current);
+    const resizeObserver = new ResizeObserver(updateSlots);
+    const mutationObserver = new MutationObserver(updateSlots);
 
-    mutationObserverRef.current.observe(rightContainerRef.current, {
+    resizeObserver.observe(personRef.current);
+
+    mutationObserver.observe(rightContainerRef.current, {
       attributes: true,
       childList: true,
       subtree: true,
     });
-    mutationObserverRef.current.observe(leftContainerRef.current, {
+    mutationObserver.observe(leftContainerRef.current, {
       attributes: true,
       childList: true,
       subtree: true,
     });
-
     return () => {
-      if (
-        !rightContainerRef.current ||
-        !leftContainerRef.current ||
-        !personRef.current
-      )
-        return;
-      mutationObserverRef.current.takeRecords();
-      resizeObserverRef.current.unobserve(personRef.current);
+      mutationObserver.disconnect();
+      resizeObserver.disconnect();
     };
-  }, []);
+  }, [updateSlots]);
 
   return (
     <div className="raptor-body-map relative w-full h-full">
       <canvas
         ref={canvasRefRef}
-        className="absolute w-full h-full top-0 z-10"
+        className="absolute w-full h-full top-0 z-10 pointer-events-none"
         width="100%"
         height="100%"
       />
@@ -212,48 +193,77 @@ export function BodyInteractions({
         >
           <PersonFrontIcon mirror={mirror} />
           {slotsButtonsPos.map(
-            ({ top, left, height, width, id, hidden, buttonOffset }) => (
-              <div
+            ({
+              top,
+              left,
+              height,
+              width,
+              id,
+              hidden,
+              rotation,
+              buttonOffset,
+            }) => (
+              <button
+                type="button"
                 key={id}
-                className={classNames('absolute z-10')}
+                data-body-part={id}
+                className={classNames(
+                  'absolute z-20 transition-opacity',
+                  variant === 'tracker-select'
+                    ? 'raptor-tracker-marker'
+                    : 'raptor-body-map__dot-button',
+                  hidden ? 'opacity-0 pointer-events-none' : 'opacity-100'
+                )}
                 onClick={() => onSelectRole((BodyPart as any)[id])}
+                aria-label={`Assign tracker to ${id
+                  .toLowerCase()
+                  .replaceAll('_', ' ')}`}
+                title={id.toLowerCase().replaceAll('_', ' ')}
                 style={{
-                  top: top + height / 2 - dotsSize / 2 + buttonOffset.top,
-                  left: left + width / 2 - dotsSize / 2 + buttonOffset.left,
+                  top: top + height / 2 + buttonOffset.top,
+                  left: left + width / 2 + buttonOffset.left,
+                  transform: `translate(-50%, -50%) rotate(${rotation}deg)`,
                 }}
               >
-                <div className="relative">
-                  {!hidden &&
-                    highlightedRoles.includes((BodyPart as any)[id]) && (
-                      <div
-                        className={classNames(
-                          'absolute rounded-full bg-status-warning',
-                          'transition-opacity opacity-100 animate-ping'
-                        )}
-                        style={{
-                          width: dotsSize,
-                          height: dotsSize,
-                          animationDuration: '1.5s',
-                        }}
-                      />
-                    )}
-                  <div
+                {variant === 'tracker-select' ? (
+                  <>
+                    <span className="raptor-tracker-marker__strap" />
+                    <span
+                      className={classNames(
+                        'raptor-tracker-marker__module',
+                        assignedRoles.includes((BodyPart as any)[id]) &&
+                          'raptor-tracker-marker__module--assigned'
+                      )}
+                    >
+                      <span className="raptor-tracker-marker__brand">R</span>
+                      <span className="raptor-tracker-marker__led" />
+                    </span>
+                  </>
+                ) : (
+                  <span
                     className={classNames(
-                      'absolute rounded-full outline-background-90 transition-opacity',
+                      'block rounded-full outline-background-90',
                       'raptor-body-map__dot hover:bg-accent-background-40',
                       assignedRoles.includes((BodyPart as any)[id])
                         ? 'bg-status-success'
-                        : 'bg-background-10',
-                      hidden ? 'opacity-0' : 'opacity-100'
+                        : 'bg-background-10'
                     )}
-                    style={{
-                      width: dotsSize,
-                      height: dotsSize,
-                      boxShadow: '0px 0px 4px black',
-                    }}
+                    style={{ width: dotsSize, height: dotsSize }}
                   />
-                </div>
-              </div>
+                )}
+                <span className="absolute inset-0">
+                  {!hidden &&
+                    highlightedRoles.includes((BodyPart as any)[id]) && (
+                      <span
+                        className={classNames(
+                          'absolute rounded-full bg-status-warning raptor-tracker-marker__warning',
+                          'transition-opacity opacity-100 animate-ping'
+                        )}
+                        style={{ animationDuration: '1.5s' }}
+                      />
+                    )}
+                </span>
+              </button>
             )
           )}
         </div>

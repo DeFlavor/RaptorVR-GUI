@@ -31,7 +31,7 @@ public class LogManager {
 
 			FileLogHandler fileHandler = new FileLogHandler(
 				mainLogDir.toPath(),
-				"slimevr-server",
+				"raptorvr-tracking-core",
 				DateTimeFormatter.ofPattern("yyyy-MM-dd_HH-mm-ss"),
 				25 * 1000000, // 25 MB max file size
 				8, // 8 max log files

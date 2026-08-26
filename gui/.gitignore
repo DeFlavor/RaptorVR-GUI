@@ -40,3 +40,4 @@ electron.vite.config.*.mjs
 # electron
 out/
 /electron/resources/jre/
+/electron/resources/steamvr-driver/

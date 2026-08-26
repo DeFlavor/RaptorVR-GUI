@@ -8,28 +8,29 @@ import { existsSync } from 'node:fs';
 import { options } from './cli';
 
 const javaBin = getPlatform() === 'windows' ? 'java.exe' : 'java';
-export const CONFIG_IDENTIFIER = 'dev.slimevr.SlimeVR';
+export const CONFIG_IDENTIFIER = 'com.raptorvr.RaptorVR';
+export const LEGACY_CONFIG_IDENTIFIER = 'dev.slimevr.SlimeVR';
 
-export const getGuiDataFolder = () => {
+const getDataFolder = (identifier: string) => {
   const platform = getPlatform();
 
   switch (platform) {
     case 'linux':
       if (process.env['XDG_DATA_HOME'])
-        return join(process.env['XDG_DATA_HOME'], CONFIG_IDENTIFIER);
-      return join(app.getPath('home'), '.local/share', CONFIG_IDENTIFIER);
+        return join(process.env['XDG_DATA_HOME'], identifier);
+      return join(app.getPath('home'), '.local/share', identifier);
     case 'windows':
-      return join(app.getPath('appData'), CONFIG_IDENTIFIER);
+      return join(app.getPath('appData'), identifier);
     case 'macos':
-      return join(
-        app.getPath('home'),
-        'Library/Application Support',
-        CONFIG_IDENTIFIER
-      );
+      return join(app.getPath('home'), 'Library/Application Support', identifier);
     case 'unknown':
       throw 'error';
   }
 };
+
+export const getGuiDataFolder = () => getDataFolder(CONFIG_IDENTIFIER);
+
+export const getLegacyDataFolder = () => getDataFolder(LEGACY_CONFIG_IDENTIFIER);
 
 export const getServerDataFolder = () => {
   const platform = getPlatform();

@@ -30,6 +30,9 @@ abstract class ProtobufBridge(@JvmField protected val bridgeName: String) : ISte
 	@ThreadSafe
 	private val outputQueue: Queue<ProtobufMessage> = LinkedBlockingQueue()
 
+	@VRServerThread
+	private val lastSharedTrackerStatuses: MutableMap<Int, ProtobufMessages.TrackerStatus.Status> = HashMap()
+
 	@Synchronize("self")
 	private val remoteTrackersBySerial: MutableMap<String, Tracker> = HashMap()
 
@@ -96,9 +99,47 @@ abstract class ProtobufBridge(@JvmField protected val bridgeName: String) : ISte
 			return
 		}
 		for (tracker in sharedTrackers) {
-			writeTrackerUpdate(tracker)
-			writeBatteryUpdate(tracker)
+			val status = getSharedTrackerStatus(tracker)
+			if (status.sendData) {
+				writeTrackerUpdate(tracker)
+				writeBatteryUpdate(tracker)
+			}
+			writeTrackerStatusUpdate(tracker, status)
 		}
+	}
+
+	/**
+	 * Returns the status that should be exposed for a shared tracker. Bridges
+	 * backed by computed trackers can override this to reflect the status of
+	 * the physical tracker(s) that feed the computed pose.
+	 */
+	@VRServerThread
+	protected open fun getSharedTrackerStatus(localTracker: Tracker): TrackerStatus = localTracker.status
+
+	@VRServerThread
+	private fun writeTrackerStatusUpdate(localTracker: Tracker, status: TrackerStatus) {
+		val bridgeStatus = when (status) {
+			TrackerStatus.DISCONNECTED,
+			TrackerStatus.TIMED_OUT,
+			-> ProtobufMessages.TrackerStatus.Status.DISCONNECTED
+
+			TrackerStatus.OK -> ProtobufMessages.TrackerStatus.Status.OK
+
+			TrackerStatus.BUSY -> ProtobufMessages.TrackerStatus.Status.BUSY
+
+			TrackerStatus.ERROR -> ProtobufMessages.TrackerStatus.Status.ERROR
+
+			TrackerStatus.OCCLUDED -> ProtobufMessages.TrackerStatus.Status.OCCLUDED
+		}
+
+		if (lastSharedTrackerStatuses[localTracker.id] == bridgeStatus) return
+
+		val builder = ProtobufMessages.TrackerStatus
+			.newBuilder()
+			.setTrackerId(localTracker.id)
+			.setStatus(bridgeStatus)
+		sendMessage(ProtobufMessage.newBuilder().setTrackerStatus(builder).build())
+		lastSharedTrackerStatuses[localTracker.id] = bridgeStatus
 	}
 
 	@VRServerThread
@@ -247,6 +288,7 @@ abstract class ProtobufBridge(@JvmField protected val bridgeName: String) : ISte
 
 	@VRServerThread
 	protected fun reconnected() {
+		lastSharedTrackerStatuses.clear()
 		for (tracker in sharedTrackers) {
 			val builder = TrackerAdded
 				.newBuilder()
@@ -271,6 +313,7 @@ abstract class ProtobufBridge(@JvmField protected val bridgeName: String) : ISte
 	override fun addSharedTracker(tracker: Tracker?) {
 		if (sharedTrackers.contains(tracker) || tracker == null) return
 		sharedTrackers.add(tracker)
+		lastSharedTrackerStatuses.remove(tracker.id)
 		val builder = TrackerAdded
 			.newBuilder()
 			.setTrackerId(tracker.id)
@@ -284,6 +327,7 @@ abstract class ProtobufBridge(@JvmField protected val bridgeName: String) : ISte
 	override fun removeSharedTracker(tracker: Tracker?) {
 		// Remove shared tracker
 		sharedTrackers.remove(tracker)
+		lastSharedTrackerStatuses.remove(tracker?.id)
 
 		// Set the tracker's status as disconnected
 		val statusBuilder = ProtobufMessages.TrackerStatus

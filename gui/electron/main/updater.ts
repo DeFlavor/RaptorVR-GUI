@@ -15,6 +15,9 @@ let status: AppUpdateStatus = { state: 'idle' };
 let availableVersion = '';
 let checkPromise: Promise<unknown> | null = null;
 let downloadPromise: Promise<unknown> | null = null;
+let installPromise: Promise<void> | null = null;
+
+const AUTO_INSTALL_DELAY_MS = 1500;
 
 function cleanErrorMessage(error: unknown) {
   const message = error instanceof Error ? error.message : String(error);
@@ -35,9 +38,32 @@ export function initializeAppUpdater(
 
   const updaterSupported = app.isPackaged;
 
+  const installDownloadedUpdate = async () => {
+    if (!updaterSupported || status.state !== 'downloaded') return;
+    if (installPromise) {
+      await installPromise;
+      return;
+    }
+
+    installPromise = (async () => {
+      await prepareForInstall();
+      autoUpdater.quitAndInstall(true, true);
+    })();
+
+    try {
+      await installPromise;
+    } catch (error) {
+      logger.error({ err: error }, 'Unable to install application update');
+      publish({ state: 'error', message: cleanErrorMessage(error) });
+    } finally {
+      installPromise = null;
+    }
+  };
+
   if (updaterSupported) {
-    autoUpdater.autoDownload = false;
-    autoUpdater.autoInstallOnAppQuit = false;
+    autoUpdater.autoDownload = true;
+    autoUpdater.autoInstallOnAppQuit = true;
+    autoUpdater.autoRunAppAfterInstall = true;
     autoUpdater.allowPrerelease = false;
 
     autoUpdater.on('checking-for-update', () => publish({ state: 'checking' }));
@@ -61,6 +87,9 @@ export function initializeAppUpdater(
     });
     autoUpdater.on('update-downloaded', (info: UpdateInfo) => {
       publish({ state: 'downloaded', version: info.version });
+      setTimeout(() => {
+        void installDownloadedUpdate();
+      }, AUTO_INSTALL_DELAY_MS);
     });
     autoUpdater.on('error', (error: Error) => {
       logger.error({ err: error }, 'Application update failed');
@@ -109,8 +138,6 @@ export function initializeAppUpdater(
     }
   });
   handleIpc(IPC_CHANNELS.UPDATER_INSTALL, async () => {
-    if (status.state !== 'downloaded') return;
-    await prepareForInstall();
-    autoUpdater.quitAndInstall(false, true);
+    await installDownloadedUpdate();
   });
 }

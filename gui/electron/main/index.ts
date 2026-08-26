@@ -23,6 +23,7 @@ import {
   findSystemJRE,
   getExeFolder,
   getGuiDataFolder,
+  getLegacyDataFolder,
   getLogsFolder,
   getServerDataFolder,
   getWindowStateFile,
@@ -35,7 +36,7 @@ import { spawn } from 'node:child_process';
 import { discordPresence } from './presence';
 import { options } from './cli';
 import { ServerStatusEvent } from 'electron/preload/interface';
-import { mkdir, writeFile } from 'node:fs/promises';
+import { access, copyFile, mkdir, writeFile } from 'node:fs/promises';
 import { MenuItem } from 'electron/main';
 
 type Stores = Awaited<ReturnType<typeof initStores>>;
@@ -386,10 +387,10 @@ const checkEnvironmentVariables = () => {
 const isServerRunning = async () => !(await isPortAvailable(21110));
 
 const spawnServer = async () => {
-  if (options.skipServerIfRunning && (await isServerRunning())) {
+  if (await isServerRunning()) {
     logger.info(
-      { skipServerIfRunning: options.skipServerIfRunning },
-      'Server is already running, skipping server start'
+      { port: 21110 },
+      'Compatible tracking core detected; attaching without launching a conflicting server'
     );
     return;
   }
@@ -434,8 +435,12 @@ const spawnServer = async () => {
             LOCALAPPDATA: process.env['USERPROFILE']
               ? path.join(process.env['USERPROFILE'], 'AppData', 'Local')
               : undefined,
+            RAPTORVR_DATA_DIR: getServerDataFolder(),
           }
-        : undefined,
+        : {
+            ...process.env,
+            RAPTORVR_DATA_DIR: getServerDataFolder(),
+          },
   });
 
   const sendToWindow = (event: ServerStatusEvent) => {
@@ -475,6 +480,30 @@ const createFolders = async () => {
   await mkdir(getGuiDataFolder(), { recursive: true });
 };
 
+const migrateLegacyData = async () => {
+  const legacyFolder = getLegacyDataFolder();
+  const raptorFolder = getGuiDataFolder();
+  const filesToCopy = [
+    'gui-settings.dat',
+    'gui-cache.dat',
+    'vrconfig.yml',
+    '.window-state.json',
+  ];
+
+  for (const fileName of filesToCopy) {
+    const source = join(legacyFolder, fileName);
+    const destination = join(raptorFolder, fileName);
+    const destinationExists = await access(destination)
+      .then(() => true)
+      .catch(() => false);
+    if (destinationExists) continue;
+
+    await copyFile(source, destination).catch((error: NodeJS.ErrnoException) => {
+      if (error.code !== 'ENOENT') throw error;
+    });
+  }
+};
+
 let isQuitting = false;
 
 app.whenReady().then(async () => {
@@ -486,6 +515,7 @@ app.whenReady().then(async () => {
 
   try {
     await createFolders();
+    await migrateLegacyData();
   } catch (err) {
     logger.error(err, 'Failed to initialize stores');
     dialog.showErrorBox(

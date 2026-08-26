@@ -3,6 +3,7 @@ package dev.slimevr.desktop.install.drivers
 import com.sun.jna.platform.win32.WinReg
 import dev.slimevr.desktop.games.vrchat.RegEditWindows
 import io.eiren.util.logging.LogManager
+import java.io.File
 
 class Windows {
 
@@ -22,26 +23,42 @@ class Windows {
 		}
 
 		val pathRegPath = "${steamVRLocation}\\bin\\win64\\vrpathreg.exe"
-		val vrPathRegContents = executeShellCommand(pathRegPath, "finddriver", "slimevr")
+		val bundledDriver = File(path, WINDOWS_STEAMVR_DRIVER_DIRECTORY).canonicalFile
+		val manifest = File(bundledDriver, "driver.vrdrivermanifest")
+		if (!manifest.isFile) {
+			LogManager.warning("Bundled RaptorVR SteamVR driver is missing, unable to install it")
+			return
+		}
+
+		val vrPathRegContents = executeShellCommand(pathRegPath, "finddriver", STEAMVR_DRIVER_NAME)
 		if (vrPathRegContents == null) {
 			LogManager.warning("Error installing SteamVR driver")
 			return
 		}
-		if (vrPathRegContents.contains("slimevr")) {
-			LogManager.info("SteamVR driver is already installed")
+
+		val installedDriver = vrPathRegContents.trim()
+		if (installedDriver.equals(bundledDriver.path, ignoreCase = true)) {
+			LogManager.info("RaptorVR SteamVR driver is already installed")
 			return
 		}
 
-		executeShellCommand(pathRegPath, "adddriver", "${path}\\${WINDOWS_STEAMVR_DRIVER_DIRECTORY}")
+		if (installedDriver.isNotEmpty()) {
+			LogManager.info("Replacing the existing SteamVR tracker driver with the bundled RaptorVR driver")
+			executeShellCommand(pathRegPath, "removedriverswithname", STEAMVR_DRIVER_NAME)
+		}
 
-		if (executeShellCommand(pathRegPath, "finddriver", "slimevr")?.contains("slimevr") != true) {
-			LogManager.warning("Failed to install SlimeVR driver")
+		executeShellCommand(pathRegPath, "adddriver", bundledDriver.path)
+
+		val verifiedDriver = executeShellCommand(pathRegPath, "finddriver", STEAMVR_DRIVER_NAME)?.trim()
+		if (!verifiedDriver.equals(bundledDriver.path, ignoreCase = true)) {
+			LogManager.warning("Failed to install RaptorVR SteamVR driver")
 			return
 		}
-		LogManager.info("SteamVR driver successfully installed")
+		LogManager.info("RaptorVR SteamVR driver successfully installed")
 	}
 
 	companion object {
+		private const val STEAMVR_DRIVER_NAME = "slimevr"
 		private const val WINDOWS_STEAMVR_DRIVER_DIRECTORY = "slimevr-openvr-driver-win64"
 	}
 }

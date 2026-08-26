@@ -67,15 +67,15 @@ fun main(args: Array<String>) {
 	val cmd: CommandLine = try {
 		parser.parse(options, args, true)
 	} catch (e: org.apache.commons.cli.ParseException) {
-		formatter.printHelp("slimevr.jar", options)
+		formatter.printHelp("raptorvr-core.jar", options)
 		exitProcess(1)
 	}
 	if (cmd.hasOption("help")) {
-		formatter.printHelp("slimevr.jar", options)
+		formatter.printHelp("raptorvr-core.jar", options)
 		exitProcess(0)
 	}
 	if (cmd.hasOption("version")) {
-		LogManager.info("SlimeVR Server $VERSION")
+		LogManager.info("RaptorVR Tracking Core $VERSION")
 		exitProcess(0)
 	}
 	if (cmd.hasOption("install")) {
@@ -97,7 +97,9 @@ fun main(args: Array<String>) {
 		exitProcess(1)
 	}
 
-	val dir = OperatingSystem.resolveLogDirectory(SLIMEVR_IDENTIFIER)?.toFile()?.absoluteFile
+	val raptorDataDir = System.getenv(RAPTORVR_DATA_DIR_ENV)?.takeIf { it.isNotBlank() }
+	val dir = raptorDataDir?.let { File(it, "logs").absoluteFile }
+		?: OperatingSystem.resolveLogDirectory(SLIMEVR_IDENTIFIER)?.toFile()?.absoluteFile
 		?: File("").absoluteFile
 	try {
 		LogManager.initialize(dir)
@@ -107,12 +109,12 @@ fun main(args: Array<String>) {
 	LogManager.info("Using log folder: $dir")
 	LogManager.info("Running version $VERSION")
 	if (!SystemUtils.isJavaVersionAtLeast(org.apache.commons.lang3.JavaVersion.JAVA_17)) {
-		LogManager.severe("SlimeVR start-up error! A minimum of Java 17 is required.")
+		LogManager.severe("RaptorVR start-up error! A minimum of Java 17 is required.")
 		JOptionPane
 			.showMessageDialog(
 				null,
-				"SlimeVR start-up error! A minimum of Java 17 is required.",
-				"SlimeVR: Java Runtime Mismatch",
+				"RaptorVR start-up error! A minimum of Java 17 is required.",
+				"RaptorVR: Java Runtime Mismatch",
 				JOptionPane.ERROR_MESSAGE,
 			)
 		LogManager.closeLogger()
@@ -120,7 +122,8 @@ fun main(args: Array<String>) {
 	}
 
 	val isInstallDisabled = System.getenv("SLIME_SERVER_DISABLE_INSTALLER")?.toInt()
-	if (featureFlags.steam && isInstallDisabled != 1) {
+	val shouldInstallSteamVRDriver = featureFlags.steam || OperatingSystem.currentPlatform == OperatingSystem.WINDOWS
+	if (shouldInstallSteamVRDriver && isInstallDisabled != 1) {
 		val installDrivers = InstallDrivers()
 		installDrivers.runInstaller()
 	}
@@ -135,15 +138,15 @@ fun main(args: Array<String>) {
 		DatagramSocket(configManager.vrConfig.server.trackerPort).close()
 		ServerSocket(21110).close()
 	} catch (e: IOException) {
-		val message = "SlimeVR start-up error! A required port (${configManager.vrConfig.server.trackerPort} and 21110) is busy. " +
-			"Make sure there is no other instance of SlimeVR Server running."
+		val message = "RaptorVR start-up error! A required port (${configManager.vrConfig.server.trackerPort} and 21110) is busy. " +
+			"Close the conflicting tracking-core process and try again."
 		LogManager
 			.severe(message)
 		JOptionPane
 			.showMessageDialog(
 				null,
 				message,
-				"SlimeVR: Ports are busy",
+				"RaptorVR: Ports are busy",
 				JOptionPane.ERROR_MESSAGE,
 			)
 		LogManager.closeLogger()
@@ -266,7 +269,15 @@ fun provideBridges(
 }
 
 const val CONFIG_FILENAME = "vrconfig.yml"
+const val RAPTORVR_DATA_DIR_ENV = "RAPTORVR_DATA_DIR"
 fun resolveConfig(): String {
+	val raptorDataDir = System.getenv(RAPTORVR_DATA_DIR_ENV)?.takeIf { it.isNotBlank() }
+	if (raptorDataDir != null) {
+		val configDirectory = Path(raptorDataDir)
+		Files.createDirectories(configDirectory)
+		return configDirectory.resolve(CONFIG_FILENAME).pathString
+	}
+
 	// If config folder exists, then save config on relative path
 	if (Path("config/").exists()) {
 		return CONFIG_FILENAME

@@ -85,6 +85,8 @@ win:
       to: '.'
     - from: './electron/resources/jre'
       to: 'jre'
+    - from: './electron/resources/steamvr-driver/slimevr-openvr-driver-win64'
+      to: 'slimevr-openvr-driver-win64'
 
 nsis:
   oneClick: true

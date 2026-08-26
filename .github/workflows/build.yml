@@ -203,6 +203,10 @@ jobs:
             throw 'Bundled Java executable was not staged'
           }
           & $java --version
+      - if: matrix.platform == 'windows'
+        name: Stage RaptorVR SteamVR driver
+        shell: pwsh
+        run: ./tools/prepare-steamvr-driver.ps1
       - name: Download Server Jar
         uses: actions/download-artifact@v8
         with:

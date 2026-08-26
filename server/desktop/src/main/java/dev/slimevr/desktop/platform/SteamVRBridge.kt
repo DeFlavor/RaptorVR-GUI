@@ -13,6 +13,7 @@ import dev.slimevr.tracking.trackers.TrackerPosition
 import dev.slimevr.tracking.trackers.TrackerPosition.Companion.getByTrackerRole
 import dev.slimevr.tracking.trackers.TrackerRole
 import dev.slimevr.tracking.trackers.TrackerRole.Companion.getById
+import dev.slimevr.tracking.trackers.TrackerStatus
 import dev.slimevr.tracking.trackers.TrackerUtils.getTrackerForSkeleton
 import dev.slimevr.util.ann.VRServerThread
 import io.eiren.util.OperatingSystem
@@ -199,6 +200,76 @@ abstract class SteamVRBridge(
 	}
 
 	override fun getAutomaticSharedTrackers(): Boolean = config.automaticSharedTrackersToggling
+
+	/**
+	 * SteamVR trackers are computed outputs, so their own status is always OK.
+	 * Expose the state of the physical tracker(s) feeding each output instead.
+	 * This lets the OpenVR driver show its off/dimmed state when a RaptorVR
+	 * tracker is powered down, including when SteamVR roles are enabled manually.
+	 */
+	@VRServerThread
+	override fun getSharedTrackerStatus(localTracker: Tracker): TrackerStatus {
+		val skeleton = instance.humanPoseManager.skeleton
+		val sources = when (localTracker.trackerPosition?.trackerRole) {
+			TrackerRole.HMD -> listOf(skeleton.headTracker)
+
+			TrackerRole.WAIST -> listOf(
+				skeleton.hipTracker,
+				skeleton.waistTracker,
+				skeleton.chestTracker,
+				skeleton.upperChestTracker,
+			)
+
+			TrackerRole.CHEST -> listOf(skeleton.upperChestTracker, skeleton.chestTracker)
+
+			TrackerRole.LEFT_FOOT -> listOf(
+				skeleton.leftFootTracker,
+				skeleton.leftLowerLegTracker,
+				skeleton.leftUpperLegTracker,
+			)
+
+			TrackerRole.RIGHT_FOOT -> listOf(
+				skeleton.rightFootTracker,
+				skeleton.rightLowerLegTracker,
+				skeleton.rightUpperLegTracker,
+			)
+
+			TrackerRole.LEFT_KNEE -> listOf(
+				skeleton.leftUpperLegTracker,
+				skeleton.leftLowerLegTracker,
+			)
+
+			TrackerRole.RIGHT_KNEE -> listOf(
+				skeleton.rightUpperLegTracker,
+				skeleton.rightLowerLegTracker,
+			)
+
+			TrackerRole.LEFT_ELBOW -> listOf(
+				skeleton.leftUpperArmTracker,
+				skeleton.leftLowerArmTracker,
+				skeleton.leftShoulderTracker,
+			)
+
+			TrackerRole.RIGHT_ELBOW -> listOf(
+				skeleton.rightUpperArmTracker,
+				skeleton.rightLowerArmTracker,
+				skeleton.rightShoulderTracker,
+			)
+
+			TrackerRole.LEFT_HAND -> listOf(skeleton.leftHandTracker)
+
+			TrackerRole.RIGHT_HAND -> listOf(skeleton.rightHandTracker)
+
+			else -> return localTracker.status
+		}.filterNotNull()
+
+		if (sources.isEmpty()) return TrackerStatus.DISCONNECTED
+		if (sources.any { it.status == TrackerStatus.OK }) return TrackerStatus.OK
+		if (sources.any { it.status == TrackerStatus.BUSY }) return TrackerStatus.BUSY
+		if (sources.any { it.status == TrackerStatus.OCCLUDED }) return TrackerStatus.OCCLUDED
+		if (sources.any { it.status == TrackerStatus.ERROR }) return TrackerStatus.ERROR
+		return TrackerStatus.DISCONNECTED
+	}
 
 	override fun setAutomaticSharedTrackers(value: Boolean) {
 		if (value == config.automaticSharedTrackersToggling) return

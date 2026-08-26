@@ -21,10 +21,89 @@ export const SIDES = [
   },
 ];
 
+type BodyAnchor = {
+  part: BodyPart;
+  x: number;
+  y: number;
+  rotation?: number;
+};
+
 export function PersonFrontIcon({ mirror = true }: { mirror?: boolean }) {
-  const CIRCLE_RADIUS = 0.0001;
   const left = +!mirror;
   const right = +mirror;
+
+  const anchors: BodyAnchor[] = [
+    { part: BodyPart.HEAD, x: 512, y: 225 },
+    { part: BodyPart.NECK, x: 512, y: 400 },
+    { part: BodyPart.UPPER_CHEST, x: 512, y: 480 },
+    { part: BodyPart.CHEST, x: 512, y: 565 },
+    { part: BodyPart.WAIST, x: 512, y: 705 },
+    { part: BodyPart.HIP, x: 512, y: 830 },
+    {
+      part: SIDES[right].shoulder,
+      x: 642,
+      y: 490,
+      rotation: -12,
+    },
+    {
+      part: SIDES[right].upperArm,
+      x: 686,
+      y: 600,
+      rotation: -18,
+    },
+    {
+      part: SIDES[right].lowerArm,
+      x: 738,
+      y: 744,
+      rotation: -22,
+    },
+    { part: SIDES[right].hand, x: 762, y: 846, rotation: -12 },
+    {
+      part: SIDES[right].upperLeg,
+      x: 608,
+      y: 982,
+      rotation: -6,
+    },
+    {
+      part: SIDES[right].lowerLeg,
+      x: 630,
+      y: 1182,
+      rotation: -3,
+    },
+    { part: SIDES[right].foot, x: 660, y: 1394, rotation: 8 },
+    {
+      part: SIDES[left].shoulder,
+      x: 382,
+      y: 490,
+      rotation: 12,
+    },
+    {
+      part: SIDES[left].upperArm,
+      x: 338,
+      y: 600,
+      rotation: 18,
+    },
+    {
+      part: SIDES[left].lowerArm,
+      x: 286,
+      y: 744,
+      rotation: 22,
+    },
+    { part: SIDES[left].hand, x: 262, y: 846, rotation: 12 },
+    {
+      part: SIDES[left].upperLeg,
+      x: 416,
+      y: 982,
+      rotation: 6,
+    },
+    {
+      part: SIDES[left].lowerLeg,
+      x: 394,
+      y: 1182,
+      rotation: 3,
+    },
+    { part: SIDES[left].foot, x: 364, y: 1394, rotation: -8 },
+  ];
 
   return (
     <svg
@@ -41,149 +120,19 @@ export function PersonFrontIcon({ mirror = true }: { mirror?: boolean }) {
         preserveAspectRatio="xMidYMid meet"
         href="/images/raptorvr-assignment-mascot.png"
       />
-      <circle
-        className="body-part-circle"
-        cx="512"
-        cy="480"
-        r={CIRCLE_RADIUS}
-        id={BodyPart[BodyPart.UPPER_CHEST]}
-      />
-      <circle
-        className="body-part-circle"
-        cx="512"
-        cy="585"
-        r={CIRCLE_RADIUS}
-        id={BodyPart[BodyPart.CHEST]}
-      />
-      <circle
-        className="body-part-circle"
-        cx="512"
-        cy="850"
-        r={CIRCLE_RADIUS}
-        id={BodyPart[BodyPart.HIP]}
-      />
-      <circle
-        className="body-part-circle"
-        cx="512"
-        cy="735"
-        r={CIRCLE_RADIUS}
-        id={BodyPart[BodyPart.WAIST]}
-      />
-      <circle
-        className="body-part-circle"
-        cx="512"
-        cy="390"
-        r={CIRCLE_RADIUS}
-        id={BodyPart[BodyPart.NECK]}
-      />
-      <circle
-        className="body-part-circle"
-        cx="512"
-        cy="270"
-        r={CIRCLE_RADIUS}
-        id={BodyPart[BodyPart.HEAD]}
-      />
-      <circle
-        className="body-part-circle"
-        cx="775"
-        cy="900"
-        r={CIRCLE_RADIUS}
-        id={BodyPart[SIDES[right].hand]}
-      />
-      <circle
-        className="body-part-circle"
-        cx="690"
-        cy="610"
-        r={CIRCLE_RADIUS}
-        id={BodyPart[SIDES[right].upperArm]}
-      />
-      <circle
-        className="body-part-circle"
-        cx="655"
-        cy="475"
-        r={CIRCLE_RADIUS}
-        id={BodyPart[SIDES[right].shoulder]}
-      />
-      <circle
-        className="body-part-circle"
-        cx="750"
-        cy="785"
-        r={CIRCLE_RADIUS}
-        id={BodyPart[SIDES[right].lowerArm]}
-      />
-      <circle
-        className="body-part-circle"
-        cx="645"
-        cy="1215"
-        r={CIRCLE_RADIUS}
-        id={BodyPart[SIDES[right].lowerLeg]}
-      />
-      <circle
-        className="body-part-circle"
-        cx="615"
-        cy="980"
-        r={CIRCLE_RADIUS}
-        id={BodyPart[SIDES[right].upperLeg]}
-      />
-      <circle
-        className="body-part-circle"
-        cx="690"
-        cy="1430"
-        r={CIRCLE_RADIUS}
-        id={BodyPart[SIDES[right].foot]}
-      />
-
-      <circle
-        className="body-part-circle"
-        cx="250"
-        cy="900"
-        r={CIRCLE_RADIUS}
-        id={BodyPart[SIDES[left].hand]}
-      />
-
-      <circle
-        className="body-part-circle"
-        cx="335"
-        cy="610"
-        r={CIRCLE_RADIUS}
-        id={BodyPart[SIDES[left].upperArm]}
-      />
-      <circle
-        className="body-part-circle"
-        cx="370"
-        cy="475"
-        r={CIRCLE_RADIUS}
-        id={BodyPart[SIDES[left].shoulder]}
-      />
-      <circle
-        className="body-part-circle"
-        cx="275"
-        cy="785"
-        r={CIRCLE_RADIUS}
-        id={BodyPart[SIDES[left].lowerArm]}
-      />
-      <circle
-        className="body-part-circle"
-        cx="390"
-        cy="1215"
-        r={CIRCLE_RADIUS}
-        id={BodyPart[SIDES[left].lowerLeg]}
-      />
-
-      <circle
-        className="body-part-circle"
-        cx="420"
-        cy="980"
-        r={CIRCLE_RADIUS}
-        id={BodyPart[SIDES[left].upperLeg]}
-      />
-      <circle
-        className="body-part-circle"
-        cx="345"
-        cy="1430"
-        r={CIRCLE_RADIUS}
-        id={BodyPart[SIDES[left].foot]}
-      />
+      {anchors.map(({ part, x, y, rotation = 0 }) => (
+        <circle
+          key={part}
+          className="body-part-circle"
+          cx={x}
+          cy={y}
+          r="1"
+          fill="transparent"
+          aria-hidden="true"
+          data-rotation={rotation}
+          id={BodyPart[part]}
+        />
+      ))}
     </svg>
   );
 }
