@@ -226,9 +226,14 @@ jobs:
           }
           & $java --version
       - if: matrix.platform == 'windows'
+        name: Restore unchanged verified RaptorVR driver
+        id: restore-driver
+        shell: pwsh
+        run: ./tools/restore-steamvr-driver.ps1
+      - if: matrix.platform == 'windows' && steps.restore-driver.outputs.reused != 'true'
         name: Set up OpenVR driver build tools
         uses: lukka/get-cmake@latest
-      - if: matrix.platform == 'windows'
+      - if: matrix.platform == 'windows' && steps.restore-driver.outputs.reused != 'true'
         name: Build native RaptorVR OpenVR driver
         shell: pwsh
         run: ./tools/prepare-steamvr-driver.ps1
