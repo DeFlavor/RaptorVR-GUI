@@ -51,7 +51,9 @@ export type GHReturn = {
     | null;
 };
 
-export type DiscordPresence = { enable: false } | { enable: true; activity: string };
+export type DiscordPresence =
+  | { enable: false }
+  | { enable: true; activity: string; iconText: string | undefined };
 
 export interface IElectronAPI {
   onServerStatus: (cb: (data: ServerStatusEvent) => void) => () => void;
@@ -79,6 +81,7 @@ export interface IElectronAPI {
   ghGet: <T extends GHGet>(options: T) => Promise<GHReturn[T['type']]>;
   setPresence: (options: DiscordPresence) => void;
   getInstallDir: () => Promise<string>;
+  isSteam: () => Promise<boolean>;
 }
 
 declare global {

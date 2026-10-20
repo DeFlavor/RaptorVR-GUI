@@ -31,6 +31,7 @@ export const IPC_CHANNELS = {
   GET_FOLDER: 'get-folder',
   GH_FETCH: 'gh-fetch',
   DISCORD_PRESENCE: 'discord-presence',
+  IS_STEAM: 'is-steam',
 } as const;
 
 export interface IpcInvokeMap {
@@ -63,4 +64,5 @@ export interface IpcInvokeMap {
     options: T
   ) => Promise<GHReturn[T['type']]>;
   [IPC_CHANNELS.DISCORD_PRESENCE]: (options: DiscordPresence) => void;
+  [IPC_CHANNELS.IS_STEAM]: () => boolean;
 }

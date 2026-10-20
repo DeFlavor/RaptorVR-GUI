@@ -85,6 +85,7 @@ abstract class ProtobufBridge(@JvmField protected val bridgeName: String) : ISte
 		target.position = source.position
 		target.setRotation(source.getRotation())
 		target.status = source.status
+		target.setVelocity(source.getVelocity())
 		target.batteryLevel = source.batteryLevel
 		target.batteryVoltage = source.batteryVoltage
 		target.dataTick()
@@ -143,16 +144,17 @@ abstract class ProtobufBridge(@JvmField protected val bridgeName: String) : ISte
 	}
 
 	@VRServerThread
-	protected fun writeTrackerUpdate(localTracker: Tracker?) {
-		val builder = ProtobufMessages.Position.newBuilder().setTrackerId(
-			localTracker!!.id,
-		)
+	protected fun writeTrackerUpdate(localTracker: Tracker) {
+		val builder = ProtobufMessages.Position.newBuilder()
+			.setTrackerId(localTracker.id)
+
 		if (localTracker.hasPosition) {
 			val pos = localTracker.position
 			builder.setX(pos.x)
 			builder.setY(pos.y)
 			builder.setZ(pos.z)
 		}
+
 		if (localTracker.hasRotation) {
 			val rot = localTracker.getRotation()
 			builder.setQx(rot.x)
@@ -160,7 +162,19 @@ abstract class ProtobufBridge(@JvmField protected val bridgeName: String) : ISte
 			builder.setQz(rot.z)
 			builder.setQw(rot.w)
 		}
-		sendMessage(ProtobufMessage.newBuilder().setPosition(builder).build())
+
+		if (localTracker.hasVelocity) {
+			val vel = localTracker.getVelocity()
+			builder.setVx(vel.x)
+			builder.setVy(vel.y)
+			builder.setVz(vel.z)
+		}
+
+		sendMessage(
+			ProtobufMessage.newBuilder()
+				.setPosition(builder)
+				.build(),
+		)
 	}
 
 	@VRServerThread
@@ -210,6 +224,16 @@ abstract class ProtobufBridge(@JvmField protected val bridgeName: String) : ISte
 					),
 
 				)
+			if (positionMessage.hasVx()) {
+				tracker
+					.setVelocity(
+						Vector3(
+							positionMessage.vx,
+							positionMessage.vy,
+							positionMessage.vz,
+						),
+					)
+			}
 			tracker.dataTick()
 		}
 	}

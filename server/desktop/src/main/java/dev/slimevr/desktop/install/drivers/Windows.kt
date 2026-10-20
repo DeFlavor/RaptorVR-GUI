@@ -1,7 +1,7 @@
 package dev.slimevr.desktop.install.drivers
 
 import com.sun.jna.platform.win32.WinReg
-import dev.slimevr.desktop.games.vrchat.RegEditWindows
+import dev.slimevr.desktop.games.vrchat.RegEditWindowsWindows
 import io.eiren.util.logging.LogManager
 import java.io.File
 

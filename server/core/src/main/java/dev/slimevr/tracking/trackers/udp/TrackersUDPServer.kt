@@ -249,7 +249,7 @@ class TrackersUDPServer(private val port: Int, name: String, private val tracker
 		) {
 			mainScope.launch {
 				withTimeoutOrNull(MAG_TIMEOUT) {
-					connection.setMag(false, trackerId)
+					connection.setMag(MagnetometerStatus.DISABLED, trackerId)
 				}
 			}
 		} else if (magStatus == MagnetometerStatus.DISABLED &&
@@ -258,7 +258,7 @@ class TrackersUDPServer(private val port: Int, name: String, private val tracker
 		) {
 			mainScope.launch {
 				withTimeoutOrNull(MAG_TIMEOUT) {
-					connection.setMag(true, trackerId)
+					connection.setMag(MagnetometerStatus.ENABLED, trackerId)
 				}
 			}
 		}
@@ -357,13 +357,6 @@ class TrackersUDPServer(private val port: Int, name: String, private val tracker
 									LogManager.info("[TrackerServer] Tracker timed out: $conn")
 								}
 							} else {
-								for (value in conn.trackers.values) {
-									if (value.status == TrackerStatus.DISCONNECTED ||
-										value.status == TrackerStatus.TIMED_OUT
-									) {
-										value.status = TrackerStatus.OK
-									}
-								}
 								conn.timedOut = false
 							}
 
@@ -404,7 +397,6 @@ class TrackersUDPServer(private val port: Int, name: String, private val tracker
 	}
 
 	private fun processPacket(received: DatagramPacket, packet: UDPPacket, connection: UDPDevice?) {
-		val tracker: Tracker?
 		when (packet) {
 			is UDPPacket0Heartbeat, is UDPPacket1Heartbeat, is UDPPacket25SetConfigFlag -> {}
 
@@ -413,8 +405,10 @@ class TrackersUDPServer(private val port: Int, name: String, private val tracker
 			is RotationPacket -> {
 				var rot = packet.rotation
 				rot = AXES_OFFSET.times(rot)
-				tracker = connection?.getTracker(packet.sensorId)
-				if (tracker == null) return
+				val tracker = connection?.getTracker(packet.sensorId) ?: return
+				if (tracker.status == TrackerStatus.DISCONNECTED || tracker.status == TrackerStatus.TIMED_OUT) {
+					tracker.status = TrackerStatus.OK
+				}
 				tracker.setRotation(rot)
 				if (packet is UDPPacket23RotationAndAcceleration) {
 					// sensorOffset is applied correctly since protocol 22
@@ -429,8 +423,10 @@ class TrackersUDPServer(private val port: Int, name: String, private val tracker
 			}
 
 			is UDPPacket17RotationData -> {
-				tracker = connection?.getTracker(packet.sensorId)
-				if (tracker == null) return
+				val tracker = connection?.getTracker(packet.sensorId) ?: return
+				if (tracker.status == TrackerStatus.DISCONNECTED || tracker.status == TrackerStatus.TIMED_OUT) {
+					tracker.status = TrackerStatus.OK
+				}
 				var rot17 = packet.rotation
 				rot17 = AXES_OFFSET * rot17
 				when (packet.dataType) {
@@ -453,8 +449,10 @@ class TrackersUDPServer(private val port: Int, name: String, private val tracker
 			is UDPPacket18MagnetometerAccuracy -> {}
 
 			is UDPPacket4Acceleration -> {
-				tracker = connection?.getTracker(packet.sensorId)
-				if (tracker == null) return
+				val tracker = connection?.getTracker(packet.sensorId) ?: return
+				if (tracker.status == TrackerStatus.DISCONNECTED || tracker.status == TrackerStatus.TIMED_OUT) {
+					tracker.status = TrackerStatus.OK
+				}
 				// sensorOffset is applied correctly since protocol 22
 				// See: https://github.com/SlimeVR/SlimeVR-Tracker-ESP/pull/480
 				if (connection.protocolVersion >= 22) {
@@ -504,8 +502,7 @@ class TrackersUDPServer(private val port: Int, name: String, private val tracker
 			}
 
 			is UDPPacket13Tap -> {
-				tracker = connection?.getTracker(packet.sensorId)
-				if (tracker == null) return
+				val tracker = connection?.getTracker(packet.sensorId) ?: return
 				LogManager.info(
 					"[TrackerServer] Tap packet received from ${tracker.name}: ${packet.tap}",
 				)
@@ -515,8 +512,7 @@ class TrackersUDPServer(private val port: Int, name: String, private val tracker
 				LogManager.severe(
 					"[TrackerServer] Error received from ${received.socketAddress}: ${packet.errorNumber}",
 				)
-				tracker = connection?.getTracker(packet.sensorId)
-				if (tracker == null) return
+				val tracker = connection?.getTracker(packet.sensorId) ?: return
 				tracker.status = TrackerStatus.ERROR
 			}
 
@@ -548,7 +544,7 @@ class TrackersUDPServer(private val port: Int, name: String, private val tracker
 			}
 
 			is UDPPacket20Temperature -> {
-				tracker = connection?.getTracker(packet.sensorId) ?: return
+				val tracker = connection?.getTracker(packet.sensorId) ?: return
 				tracker.temperature = packet.temperature
 			}
 
@@ -616,8 +612,7 @@ class TrackersUDPServer(private val port: Int, name: String, private val tracker
 			}
 
 			is UDPPacket26FlexData -> {
-				tracker = connection?.getTracker(packet.sensorId)
-				if (tracker == null) return
+				val tracker = connection?.getTracker(packet.sensorId) ?: return
 				if (tracker.trackerDataType == TrackerDataType.FLEX_RESISTANCE) {
 					tracker.trackerFlexHandler.setFlexResistance(packet.flexData)
 				} else if (tracker.trackerDataType == TrackerDataType.FLEX_ANGLE) {
@@ -627,8 +622,7 @@ class TrackersUDPServer(private val port: Int, name: String, private val tracker
 			}
 
 			is UDPPacket27Position -> {
-				tracker = connection?.getTracker(packet.sensorId)
-				if (tracker == null) return
+				val tracker = connection?.getTracker(packet.sensorId) ?: return
 				tracker.position = packet.position
 				// dont call dataTick here as this is just position update
 			}

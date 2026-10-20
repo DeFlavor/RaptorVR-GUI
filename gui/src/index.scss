@@ -1017,3 +1017,10 @@ div {
 :root[data-theme='light'] .raptor-signal img {
   filter: none;
 }
+
+a,
+.no-user-drag {
+  -webkit-user-drag: none;
+  -webkit-user-select: none;
+  user-select: none;
+}

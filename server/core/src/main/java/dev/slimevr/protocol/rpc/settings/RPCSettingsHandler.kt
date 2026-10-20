@@ -9,6 +9,7 @@ import dev.slimevr.protocol.ProtocolAPI
 import dev.slimevr.protocol.rpc.RPCHandler
 import dev.slimevr.tracking.processor.config.SkeletonConfigToggles
 import dev.slimevr.tracking.processor.config.SkeletonConfigValues
+import dev.slimevr.tracking.trackers.TrackerPosition
 import dev.slimevr.tracking.trackers.TrackerRole
 import solarxr_protocol.rpc.ChangeSettingsRequest
 import solarxr_protocol.rpc.RpcMessage
@@ -127,7 +128,6 @@ class RPCSettingsHandler(var rpcHandler: RPCHandler, var api: ProtocolAPI) {
 			val vmcConfig = api.server.configManager
 				.vrConfig
 				.vmc
-			val vmcHandler = api.server.vMCHandler
 			val osc = req.vmcOsc().oscSettings()
 
 			if (osc != null) {
@@ -136,12 +136,21 @@ class RPCSettingsHandler(var rpcHandler: RPCHandler, var api: ProtocolAPI) {
 				vmcConfig.portOut = osc.portOut()
 				vmcConfig.address = osc.address()
 			}
-			if (req.vmcOsc().vrmJson() != null) {
-				vmcConfig.vrmJson = req.vmcOsc().vrmJson().ifEmpty { null }
-			}
 			vmcConfig.anchorHip = req.vmcOsc().anchorHip()
 			vmcConfig.mirrorTracking = req.vmcOsc().mirrorTracking()
+		}
 
+		if (req.vrm() != null) {
+			val vmcConfig = api.server.configManager
+				.vrConfig
+				.vmc
+			if (req.vrm().vrmJson() != null) {
+				vmcConfig.vrmJson = req.vrm().vrmJson().ifEmpty { null }
+			}
+		}
+
+		if (req.vmcOsc() != null || req.vrm() != null) {
+			val vmcHandler = api.server.vMCHandler
 			vmcHandler.refreshSettings(true)
 		}
 
@@ -158,6 +167,10 @@ class RPCSettingsHandler(var rpcHandler: RPCHandler, var api: ProtocolAPI) {
 				tapDetectionConfig
 					.mountingResetEnabled = tapDetectionSettings.mountingResetEnabled()
 				tapDetectionConfig.setupMode = tapDetectionSettings.setupMode()
+
+				tapDetectionConfig.yawResetTracker = TrackerPosition.getByBodyPart(tapDetectionSettings.yawResetTracker()) ?: TrackerPosition.CHEST
+				tapDetectionConfig.fullResetTracker = TrackerPosition.getByBodyPart(tapDetectionSettings.fullResetTracker()) ?: TrackerPosition.LEFT_UPPER_LEG
+				tapDetectionConfig.mountingResetTracker = TrackerPosition.getByBodyPart(tapDetectionSettings.mountingResetTracker()) ?: TrackerPosition.RIGHT_UPPER_LEG
 
 				// set number of trackers that can have high accel before taps
 				// are rejected
@@ -362,6 +375,12 @@ class RPCSettingsHandler(var rpcHandler: RPCHandler, var api: ProtocolAPI) {
 			config.trackersOverHID = requestConfig.trackersOverHid()
 		}
 
+		if (req.velocitySettings() != null) {
+			val velocityConfig = api.server.configManager.vrConfig.velocityConfig
+			velocityConfig.sendDerivedVelocity = req.velocitySettings().sendDerivedVelocity()
+			velocityConfig.updateTrackersVelocitySettings()
+		}
+
 		api.server.configManager.saveConfig()
 	}
 
@@ -379,7 +398,7 @@ class RPCSettingsHandler(var rpcHandler: RPCHandler, var api: ProtocolAPI) {
 			val settings = SettingsResponse
 				.createSettingsResponse(
 					fbb,
-					createSteamVRSettings(fbb, bridge), 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0,
+					createSteamVRSettings(fbb, bridge), 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0,
 				)
 			val outbound =
 				rpcHandler.createRPCMessage(fbb, RpcMessage.SettingsResponse, settings)

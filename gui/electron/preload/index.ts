@@ -57,4 +57,5 @@ contextBridge.exposeInMainWorld('electronAPI', {
   ghGet: (req) => ipcRenderer.invoke(IPC_CHANNELS.GH_FETCH, req),
   setPresence: (options) => ipcRenderer.invoke(IPC_CHANNELS.DISCORD_PRESENCE, options),
   getInstallDir: () => ipcRenderer.invoke(IPC_CHANNELS.GET_FOLDER, 'exe'),
+  isSteam: () => ipcRenderer.invoke(IPC_CHANNELS.IS_STEAM),
 } satisfies IElectronAPI);

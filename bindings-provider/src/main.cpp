@@ -15,6 +15,13 @@
 
 #include "openvr.h"
 
+#ifdef _WIN32
+#include <Windows.h>
+#else
+#include <cstdlib>
+#endif
+
+namespace fs = std::filesystem;
 using namespace std::chrono_literals;
 using namespace solarxr_protocol;
 
@@ -96,6 +103,35 @@ static void signal_handler(int signal) {
 int main() {
     auto &logger = Logger::get();
 
+    // Steam and SteamVR respectively set these environment variables on applications that
+    // they spawn, which the SteamVR client library (vrclient) will then use as the
+    // application key when initiating the connection with vrserver. This may not
+    // be ideal if we are launched by another Steam or OpenVR application, as we will inherit
+    // their app key through the environment, which means SteamVR will load the wrong bindings.
+    // A real-world example of this is if someone uses an application such as OpenVR-Autostarter
+    // to start the SlimeVR Server. OpenVR-Autostarter installs an application manifest with the
+    // app key "dreiekk.openvr-autostarter", so when it starts SlimeVR Server, which then starts us,
+    // the STEAMVR_APPKEY="dreiekk.openvr-autostarter" environment variable will be set.
+    //
+    // We want SteamVR to use the appkey of the Steam version of our application if possible.
+    // Unfortunately, we cannot install an application vrmanifest to force the app key,
+    // as SteamVR requires a binary path in the manifest to consider it valid. We do not want to install
+    // a manifest with a binary path because we want the SlimeVR Server to start us when the
+    // driver initiates a connection, rather than getting auto-started by SteamVR.
+    //
+    // This is not documented anywhere publicly, see CVRClient::SendConnectMessage in vrclient instead.
+
+    constexpr const char *STEAM_APPID = "3245490";
+    constexpr const char *STEAMVR_APPKEY = "steam.overlay.3245490";
+
+#ifdef _WIN32
+    SetEnvironmentVariableA("SteamAppId", STEAM_APPID);
+    SetEnvironmentVariableA("STEAMVR_APPKEY", STEAMVR_APPKEY);
+#else
+    setenv("SteamAppId", STEAM_APPID, 1);
+    setenv("STEAMVR_APPKEY", STEAMVR_APPKEY, 1);
+#endif
+
     try {
         SolarXRConnection conn;
         std::unique_ptr<vr::IVRSystem, decltype(&shutdown_vr)> sys{ nullptr,
@@ -128,14 +164,20 @@ int main() {
         vr::IVRApplications *app = vr::VRApplications();
         vr::IVRInput *input = vr::VRInput();
 
-        auto [appManifestPath, actionManifestPath] = VRUtils::initialiseManifest();
+        fs::path actionManifestPath;
+        std::tie(std::ignore, actionManifestPath) = VRUtils::initialiseManifest();
 
+        // We don't want our app key to randomly change if SteamVR decides to honour
+        // application manifests with no binary path. Instead let it generate an
+        // app key based on the executable name (system.generated.[lowercase executable name])
+#if false
         if (auto err = app->AddApplicationManifest(appManifestPath.string().data(), true);
             err != vr::VRApplicationError_None) {
             logger.error("Failed to add application manifest: {}",
                          app->GetApplicationsErrorNameFromEnum(err));
             return 1;
         }
+#endif
 
         // SetActionManifestPath may return IPCError if vrserver is busy and takes
         // too long to reply, so keep invoking until it succeeds

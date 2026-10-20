@@ -129,7 +129,7 @@ handleIpc(IPC_CHANNELS.LOG, (e, type, ...args) => {
 });
 
 handleIpc(IPC_CHANNELS.OPEN_URL, (e, url) => {
-  const allowed_urls = [
+  const allowedUrls = [
     /^steam:\/\//,
     /^ms-settings:network$/,
     /^https:\/\/(?:.+\.)?slimevr\.dev(?:\/.+)?$/,
@@ -138,7 +138,7 @@ handleIpc(IPC_CHANNELS.OPEN_URL, (e, url) => {
     /^https:\/\/github\.com\/DeFlavor\/RaptorVR-GUI(?:\/.+)?$/,
     /^https:\/\/discord\.gg\/slimevr$/,
   ];
-  if (allowed_urls.find((a) => url.match(a))) open(url);
+  if (allowedUrls.find((a) => url.match(a))) open(url);
   else logger.error({ url }, 'attempted to open non-whitelisted URL');
 });
 
@@ -161,7 +161,7 @@ handleIpc(IPC_CHANNELS.STORAGE, async (e, { type, method, key, value }) => {
 handleIpc(IPC_CHANNELS.DISCORD_PRESENCE, async (e, options) => {
   if (options.enable) {
     if (!discordPresence.state.ready) await discordPresence.connect();
-    discordPresence.updateActivity(options.activity);
+    discordPresence.updateActivity(options.activity, options.iconText);
   } else if (discordPresence.state.ready) {
     discordPresence.destroy();
   }
@@ -194,6 +194,10 @@ handleIpc(IPC_CHANNELS.GET_FOLDER, (e, folder) => {
     case 'exe':
       return getExeFolder();
   }
+});
+
+handleIpc(IPC_CHANNELS.IS_STEAM, () => {
+  return options.steam;
 });
 
 const defaultWindowState: {
@@ -372,9 +376,9 @@ function createWindow() {
 }
 
 const checkEnvironmentVariables = () => {
-  const to_check = ['_JAVA_OPTIONS', 'JAVA_TOOL_OPTIONS'];
+  const disallowedVars = ['_JAVA_OPTIONS', 'JAVA_TOOL_OPTIONS'];
 
-  const set = to_check.filter((env) => !!process.env[env]);
+  const set = disallowedVars.filter((env) => !!process.env[env]);
   if (set.length > 0) {
     dialog.showErrorBox(
       'Raptor VR GUI',

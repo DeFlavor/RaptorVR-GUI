@@ -13,6 +13,7 @@ import com.jme3.system.NanoTimer
 import dev.slimevr.VRServer
 import dev.slimevr.config.VRCOSCConfig
 import dev.slimevr.tracking.trackers.Device
+import dev.slimevr.tracking.trackers.DeviceOrigin
 import dev.slimevr.tracking.trackers.Tracker
 import dev.slimevr.tracking.trackers.TrackerPosition
 import dev.slimevr.tracking.trackers.TrackerStatus
@@ -118,7 +119,7 @@ class VRCOSCHandler(
 		for (netInt in NetworkInterface.getNetworkInterfaces()) {
 			if (netInt.isUp && !netInt.isLoopback && !netInt.isVirtual) {
 				for (netAddr in netInt.interfaceAddresses) {
-					if (a == netAddr.address || a.address.contentEquals(netAddr.address.address) || a.hostName == netAddr.address.hostName) {
+					if (a == netAddr.address || a.address.contentEquals(netAddr.address.address)) {
 						return true
 					}
 				}
@@ -133,7 +134,6 @@ class VRCOSCHandler(
 				b != null &&
 				(
 					a.address.contentEquals(b.address) ||
-						(a.hostName == b.hostName) ||
 						(ipIsLocal(a) && ipIsLocal(b))
 					)
 			)
@@ -328,7 +328,7 @@ class VRCOSCHandler(
 			// Create device if it doesn't exist
 			if (vrsystemTrackersDevice == null) {
 				// Instantiate OSC Trackers device
-				vrsystemTrackersDevice = server.deviceManager.createDevice("VRC VRSystem", null, "VRChat")
+				vrsystemTrackersDevice = server.deviceManager.createDevice(DeviceOrigin.VRCHAT, "VRC VRSystem", null, "VRChat")
 				server.deviceManager.addDevice(vrsystemTrackersDevice!!)
 			}
 
@@ -404,7 +404,7 @@ class VRCOSCHandler(
 			// Receiving OSC Trackers data. This is not from VRChat.
 			if (oscTrackersDevice == null) {
 				// Instantiate OSC Trackers device
-				oscTrackersDevice = server.deviceManager.createDevice("OSC Tracker", null, "OSC Trackers")
+				oscTrackersDevice = server.deviceManager.createDevice(DeviceOrigin.OSC, "OSC Tracker", null, "OSC Trackers")
 				server.deviceManager.addDevice(oscTrackersDevice!!)
 			}
 
