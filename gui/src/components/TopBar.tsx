@@ -1,4 +1,5 @@
 import { version } from '../../package.json';
+import upstream from '../../../.github/slimevr-upstream.json';
 import { ReactNode, useEffect, useState } from 'react';
 import { NavLink, useMatch } from 'react-router-dom';
 import {
@@ -28,7 +29,14 @@ import { useElectron } from '@/hooks/electron';
 import { openUrl } from '@/hooks/crossplatform';
 
 export function VersionTag() {
-  return <span className="raptor-core-badge select-text">v{version}</span>;
+  return (
+    <span
+      className="raptor-core-badge select-text"
+      title={`Includes SlimeVR ${upstream.version} tracking mechanics`}
+    >
+      v{version}
+    </span>
+  );
 }
 
 export function TopBar({

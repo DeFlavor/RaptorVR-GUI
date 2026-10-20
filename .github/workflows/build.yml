@@ -2,11 +2,23 @@ name: Raptor VR GUI Release
 
 on:
   push:
+    branches: [main]
     tags: ['v*']
+  pull_request:
   workflow_dispatch:
+    inputs:
+      source_ref:
+        description: Branch or commit to validate
+        type: string
+        required: false
+  workflow_call:
+    inputs:
+      source_ref:
+        type: string
+        required: true
 
 permissions:
-  contents: write
+  contents: read
 
 jobs:
   setup-matrix:
@@ -37,6 +49,7 @@ jobs:
       - name: Checkout
         uses: actions/checkout@v6
         with:
+          ref: ${{ inputs.source_ref || github.ref }}
           submodules: recursive
       - if: matrix.platform == 'linux'
         name: Install GCC
@@ -66,6 +79,7 @@ jobs:
       - name: Checkout
         uses: actions/checkout@v6
         with:
+          ref: ${{ inputs.source_ref || github.ref }}
           submodules: recursive
       - name: Get tags
         run: git fetch --tags origin --recurse-submodules=no --force
@@ -77,7 +91,11 @@ jobs:
           node-version-file: '.node-version'
           cache: 'pnpm'
       - name: GUI Lint
-        run: pnpm i && cd gui && pnpm run lint
+        run: |
+          pnpm install --frozen-lockfile
+          pnpm --dir gui test:updater
+          node --test tools/tests/sync-slimevr.test.mjs
+          pnpm --dir gui lint
 
   java-checks:
     name: Java Checks
@@ -86,6 +104,7 @@ jobs:
       - name: Checkout
         uses: actions/checkout@v6
         with:
+          ref: ${{ inputs.source_ref || github.ref }}
           submodules: recursive
       - name: Set up JDK 17
         uses: actions/setup-java@v5
@@ -104,6 +123,7 @@ jobs:
       - name: Checkout
         uses: actions/checkout@v6
         with:
+          ref: ${{ inputs.source_ref || github.ref }}
           submodules: recursive
       - name: Get tags
         run: git fetch --tags origin --recurse-submodules=no --force
@@ -117,7 +137,7 @@ jobs:
       - name: Build ShadowJar
         run: ./gradlew :server:desktop:shadowJar --build-cache
       - name: Test with Gradle
-        run: ./gradlew :server:desktop:test
+        run: ./gradlew :server:core:test :server:desktop:test
       - name: Upload Server Jar
         uses: actions/upload-artifact@v7
         with:
@@ -133,6 +153,7 @@ jobs:
       - name: Checkout
         uses: actions/checkout@v6
         with:
+          ref: ${{ inputs.source_ref || github.ref }}
           submodules: recursive
       - name: Get tags
         run: git fetch --tags origin --recurse-submodules=no --force
@@ -146,7 +167,7 @@ jobs:
       - name: Build JS
         env:
           SENTRY_AUTH_TOKEN: ${{ secrets.SENTRY_AUTH_TOKEN }}
-        run: pnpm i && cd gui && pnpm run build
+        run: pnpm install --frozen-lockfile && cd gui && pnpm run build
       - name: Tar GUI Dist
         run: tar -czf slimevr-gui-dist.tar.gz -C gui/out .
       - name: Upload GUI Dist
@@ -172,6 +193,7 @@ jobs:
       - name: Checkout
         uses: actions/checkout@v6
         with:
+          ref: ${{ inputs.source_ref || github.ref }}
           submodules: recursive
       - name: Get tags
         run: git fetch --tags origin --recurse-submodules=no --force
@@ -232,15 +254,17 @@ jobs:
         shell: bash
         env:
           SENTRY_AUTH_TOKEN: ${{ secrets.SENTRY_AUTH_TOKEN }}
+          SOURCE_REF: ${{ inputs.source_ref }}
         run: |
           mkdir -p gui/dist/artifacts/linux/ \
                    gui/dist/artifacts/win \
                    gui/dist/artifacts/mac
-          VERSION=$(git --no-pager tag --sort -taggerdate --points-at HEAD | head -1)
-          [ -z "$VERSION" ] && VERSION="0.0.0"
-          VERSION="${VERSION#v}"
+          VERSION=$(node -p "require('./gui/package.json').version")
+          if [[ "$GITHUB_REF" == refs/tags/v* && -z "$SOURCE_REF" ]]; then
+            test "$GITHUB_REF_NAME" = "v$VERSION"
+          fi
           echo "Building version: $VERSION"
-          pnpm i
+          pnpm install --frozen-lockfile
           cd gui
           pnpm exec electron-builder --${{ matrix.platform }} \
             ${{ matrix.platform == 'macos' && '--universal' || '' }} \
@@ -335,69 +359,11 @@ jobs:
           name: release-${{ matrix.platform }}-${{ matrix.os }}
           path: release-out/*
 
-  bundle-android:
-    name: Build Android APK
-    if: false
-    needs: [build-gui-frontend]
-    runs-on: ubuntu-latest
-    steps:
-      - name: Checkout
-        uses: actions/checkout@v6
-        with:
-          submodules: recursive
-      - name: Get tags
-        run: git fetch --tags origin --recurse-submodules=no --force
-      - name: Set up JDK 17
-        uses: actions/setup-java@v5
-        with:
-          java-version: '17'
-          distribution: 'adopt'
-      - name: Setup Gradle
-        uses: gradle/actions/setup-gradle@v6
-      - name: Download GUI Dist
-        uses: actions/download-artifact@v8
-        with:
-          name: gui-dist
-      - name: Extract GUI for Android
-        run: mkdir -p gui/out && tar -xzf slimevr-gui-dist.tar.gz -C gui/out
-      - name: Build APK
-        run: ./gradlew :server:android:build --build-cache
-        env:
-          ANDROID_STORE_FILE: ${{ secrets.ANDROID_STORE_FILE }}
-          ANDROID_STORE_PASSWD: ${{ secrets.ANDROID_STORE_PASSWD }}
-          ANDROID_KEY_ALIAS: ${{ secrets.ANDROID_KEY_ALIAS }}
-          ANDROID_KEY_PASSWD: ${{ secrets.ANDROID_KEY_PASSWD }}
-      - name: Test with Gradle
-        run: ./gradlew test
-      - name: Prepare APK
-        run: cp server/android/build/outputs/apk/release/*.apk ./SlimeVR-android.apk
-      - name: Upload APK
-        uses: actions/upload-artifact@v7
-        with:
-          name: release-android
-          path: SlimeVR-android.apk
-
-      - name: Build Google Play release bundle
-        if: startsWith(github.ref, 'refs/tags/')
-        run: ./gradlew :server:android:bundleRelease
-        env:
-          ANDROID_STORE_FILE: ${{ secrets.ANDROID_GPLAY_STORE_FILE }}
-          ANDROID_STORE_PASSWD: ${{ secrets.ANDROID_GPLAY_STORE_PASSWD }}
-          ANDROID_KEY_ALIAS: ${{ secrets.ANDROID_GPLAY_KEY_ALIAS }}
-          ANDROID_KEY_PASSWD: ${{ secrets.ANDROID_GPLAY_KEY_PASSWD }}
-
-      - name: Upload the Google Play artifact
-        uses: actions/upload-artifact@v7
-        if: startsWith(github.ref, 'refs/tags/')
-        with:
-          # Artifact name
-          name: 'SlimeVR-Android-GPDev' # optional, default is artifact
-          # A file, directory or wildcard pattern that describes what to upload
-          path: server/android/build/outputs/bundle/release/*
-
   create-release:
     name: Publish Raptor VR GUI Release
-    needs: [package-desktop]
+    needs: [gui-checks, java-checks, package-desktop]
+    permissions:
+      contents: write
     if: startsWith(github.ref, 'refs/tags/')
     runs-on: ubuntu-latest
     steps:
@@ -410,7 +376,11 @@ jobs:
       - name: Create GitHub Release
         uses: softprops/action-gh-release@v3
         with:
-          draft: false
+          draft: true
           generate_release_notes: true
           files: |
             release-out/*
+      - name: Publish complete release
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: gh release edit "$GITHUB_REF_NAME" --draft=false --latest

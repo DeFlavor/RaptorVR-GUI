@@ -28,6 +28,7 @@ export type AppUpdateStatus =
       bytesPerSecond: number;
     }
   | { state: 'downloaded'; version: string }
+  | { state: 'installing'; version: string }
   | { state: 'unsupported'; message: string }
   | { state: 'error'; message: string };
 

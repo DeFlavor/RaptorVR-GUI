@@ -1,7 +1,7 @@
 package dev.slimevr.desktop.install.drivers
 
 import com.sun.jna.platform.win32.WinReg
-import dev.slimevr.desktop.games.vrchat.RegEditWindowsWindows
+import dev.slimevr.desktop.games.vrchat.RegEditWindows
 import io.eiren.util.logging.LogManager
 import java.io.File
 
@@ -38,7 +38,12 @@ class Windows {
 			return
 		}
 
-		val installedDriver = vrPathRegContents.trim()
+		val (findExitCode, findOutput) = vrPathRegContents
+		if (findExitCode != 0 && !shouldInstallDriver(findExitCode)) {
+			LogManager.warning("Skipping RaptorVR driver installation: ${getDriverInstallSkipReason(findExitCode)}")
+			return
+		}
+		val installedDriver = if (findExitCode == 0) findOutput.trim() else ""
 		if (installedDriver.equals(bundledDriver.path, ignoreCase = true)) {
 			LogManager.info("RaptorVR SteamVR driver is already installed")
 			return
@@ -49,9 +54,13 @@ class Windows {
 			executeShellCommand(pathRegPath, "removedriverswithname", STEAMVR_DRIVER_NAME)
 		}
 
-		executeShellCommand(pathRegPath, "adddriver", bundledDriver.path)
+		val added = executeShellCommand(pathRegPath, "adddriver", bundledDriver.path)
+		if (added == null || added.first != 0) {
+			LogManager.warning("Failed to register the bundled RaptorVR SteamVR driver")
+			return
+		}
 
-		val verifiedDriver = executeShellCommand(pathRegPath, "finddriver", STEAMVR_DRIVER_NAME)?.trim()
+		val verifiedDriver = findDriverPath(pathRegPath, STEAMVR_DRIVER_NAME)
 		if (!verifiedDriver.equals(bundledDriver.path, ignoreCase = true)) {
 			LogManager.warning("Failed to install RaptorVR SteamVR driver")
 			return
@@ -60,9 +69,7 @@ class Windows {
 	}
 
 	private fun removeLegacyRaptorDriver(pathRegPath: String) {
-		val legacyDriverPath = executeShellCommand(pathRegPath, "finddriver", LEGACY_STEAMVR_DRIVER_NAME)
-			?.trim()
-			.orEmpty()
+		val legacyDriverPath = findDriverPath(pathRegPath, LEGACY_STEAMVR_DRIVER_NAME).orEmpty()
 		if (legacyDriverPath.isEmpty()) return
 
 		val legacyDriver = File(legacyDriverPath).canonicalFile
@@ -77,16 +84,15 @@ class Windows {
 
 		LogManager.info("Removing the legacy SlimeVR-named RaptorVR SteamVR driver")
 		executeShellCommand(pathRegPath, "removedriver", legacyDriver.path)
-		val remainingLegacyDriver = executeShellCommand(
-			pathRegPath,
-			"finddriver",
-			LEGACY_STEAMVR_DRIVER_NAME,
-		)
-			?.trim()
-			.orEmpty()
+		val remainingLegacyDriver = findDriverPath(pathRegPath, LEGACY_STEAMVR_DRIVER_NAME).orEmpty()
 		if (remainingLegacyDriver.equals(legacyDriver.path, ignoreCase = true)) {
 			LogManager.warning("Unable to remove the legacy SlimeVR-named RaptorVR driver")
 		}
+	}
+
+	private fun findDriverPath(pathRegPath: String, name: String): String? {
+		val result = executeShellCommand(pathRegPath, "finddriver", name) ?: return null
+		return if (result.first == 0) result.second.trim() else null
 	}
 
 	companion object {

@@ -14,10 +14,10 @@ const { autoUpdater } = electronUpdater as unknown as { autoUpdater: AppUpdater 
 let status: AppUpdateStatus = { state: 'idle' };
 let availableVersion = '';
 let checkPromise: Promise<unknown> | null = null;
-let downloadPromise: Promise<unknown> | null = null;
 let installPromise: Promise<void> | null = null;
 
 const AUTO_INSTALL_DELAY_MS = 1500;
+const UPDATE_CHECK_INTERVAL_MS = 60 * 60 * 1000;
 
 function cleanErrorMessage(error: unknown) {
   const message = error instanceof Error ? error.message : String(error);
@@ -39,13 +39,14 @@ export function initializeAppUpdater(
   const updaterSupported = app.isPackaged;
 
   const installDownloadedUpdate = async () => {
-    if (!updaterSupported || status.state !== 'downloaded') return;
     if (installPromise) {
       await installPromise;
       return;
     }
+    if (!updaterSupported || status.state !== 'downloaded') return;
 
     installPromise = (async () => {
+      publish({ state: 'installing', version: availableVersion });
       await prepareForInstall();
       autoUpdater.quitAndInstall(true, true);
     })();
@@ -86,6 +87,7 @@ export function initializeAppUpdater(
       });
     });
     autoUpdater.on('update-downloaded', (info: UpdateInfo) => {
+      availableVersion = info.version;
       publish({ state: 'downloaded', version: info.version });
       setTimeout(() => {
         void installDownloadedUpdate();
@@ -107,14 +109,24 @@ export function initializeAppUpdater(
       publish(status);
       return;
     }
+    // A second click must not reset an active download or launch another check.
+    if (
+      ['available', 'downloading', 'downloaded', 'installing'].includes(status.state)
+    ) {
+      publish(status);
+      return;
+    }
     if (checkPromise) {
-      await checkPromise;
+      await checkPromise.catch(() => undefined);
       return;
     }
 
-    checkPromise = autoUpdater.checkForUpdates();
+    checkPromise = Promise.resolve().then(() => autoUpdater.checkForUpdates());
     try {
       await checkPromise;
+    } catch (error) {
+      logger.error({ err: error }, 'Unable to check for application updates');
+      publish({ state: 'error', message: cleanErrorMessage(error) });
     } finally {
       checkPromise = null;
     }
@@ -122,22 +134,17 @@ export function initializeAppUpdater(
 
   handleIpc(IPC_CHANNELS.UPDATER_GET_STATUS, () => status);
   handleIpc(IPC_CHANNELS.UPDATER_CHECK, checkForUpdates);
-  handleIpc(IPC_CHANNELS.UPDATER_DOWNLOAD, async () => {
-    if (!updaterSupported) {
-      publish(status);
-      return;
-    }
-    if (!availableVersion) await checkForUpdates();
-    if (!availableVersion || downloadPromise) return;
-
-    downloadPromise = autoUpdater.downloadUpdate();
-    try {
-      await downloadPromise;
-    } finally {
-      downloadPromise = null;
-    }
-  });
+  // autoDownload owns downloads, including calls through the legacy IPC method.
+  handleIpc(IPC_CHANNELS.UPDATER_DOWNLOAD, checkForUpdates);
   handleIpc(IPC_CHANNELS.UPDATER_INSTALL, async () => {
     await installDownloadedUpdate();
   });
+
+  if (updaterSupported) {
+    const timer = setInterval(() => {
+      void checkForUpdates();
+    }, UPDATE_CHECK_INTERVAL_MS);
+    timer.unref();
+    app.once('before-quit', () => clearInterval(timer));
+  }
 }

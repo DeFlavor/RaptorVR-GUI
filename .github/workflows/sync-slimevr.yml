@@ -1,0 +1,90 @@
+name: Sync stable SlimeVR releases
+
+on:
+  schedule:
+    - cron: '17 */6 * * *'
+  workflow_dispatch:
+
+concurrency:
+  group: slimevr-upstream-sync
+  cancel-in-progress: false
+
+permissions:
+  contents: read
+
+jobs:
+  prepare:
+    if: github.repository == 'DeFlavor/RaptorVR-GUI'
+    runs-on: ubuntu-latest
+    permissions:
+      contents: write
+    outputs:
+      changed: ${{ steps.sync.outputs.changed }}
+      branch: ${{ steps.sync.outputs.branch }}
+      base_sha: ${{ steps.sync.outputs.base_sha }}
+      head_sha: ${{ steps.sync.outputs.head_sha }}
+      version: ${{ steps.sync.outputs.version }}
+      tag: ${{ steps.sync.outputs.tag }}
+      upstream_tag: ${{ steps.sync.outputs.upstream_tag }}
+    steps:
+      - uses: actions/checkout@v6
+        with:
+          ref: main
+          fetch-depth: 0
+      - uses: actions/setup-node@v6
+        with:
+          node-version-file: .node-version
+      - name: Prepare upstream integration
+        id: sync
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: node tools/sync-slimevr.mjs
+
+  validate:
+    needs: prepare
+    if: needs.prepare.outputs.changed == 'true'
+    permissions:
+      contents: write
+    uses: ./.github/workflows/build.yml
+    with:
+      source_ref: ${{ needs.prepare.outputs.head_sha }}
+    secrets: inherit
+
+  promote:
+    needs: [prepare, validate]
+    if: needs.prepare.outputs.changed == 'true'
+    runs-on: ubuntu-latest
+    permissions:
+      contents: write
+    steps:
+      - uses: actions/checkout@v6
+        with:
+          ref: ${{ needs.prepare.outputs.head_sha }}
+          fetch-depth: 0
+      - uses: actions/download-artifact@v8
+        with:
+          pattern: release-*
+          path: release-out
+          merge-multiple: true
+      - name: Promote the validated RaptorVR build
+        env:
+          GH_TOKEN: ${{ github.token }}
+          BASE_SHA: ${{ needs.prepare.outputs.base_sha }}
+          HEAD_SHA: ${{ needs.prepare.outputs.head_sha }}
+          RELEASE_TAG: ${{ needs.prepare.outputs.tag }}
+          UPSTREAM_TAG: ${{ needs.prepare.outputs.upstream_tag }}
+          SYNC_BRANCH: ${{ needs.prepare.outputs.branch }}
+        run: |
+          set -euo pipefail
+          CURRENT_MAIN=$(git ls-remote origin refs/heads/main | cut -f1)
+          test "$CURRENT_MAIN" = "$BASE_SHA" || {
+            echo 'Main changed during validation. Rerun the sync; no release was published.'
+            exit 1
+          }
+          test "$(git rev-parse HEAD)" = "$HEAD_SHA"
+          git tag "$RELEASE_TAG" "$HEAD_SHA"
+          git push --atomic origin HEAD:refs/heads/main "refs/tags/$RELEASE_TAG"
+          printf 'Includes SlimeVR %s tracking mechanics with the RaptorVR interface.\n\nThe tracking tests, GUI checks and desktop builds passed before publication.\n' "$UPSTREAM_TAG" > release-notes.md
+          gh release create "$RELEASE_TAG" --verify-tag --draft --title "RaptorVR $RELEASE_TAG" --notes-file release-notes.md release-out/*
+          gh release edit "$RELEASE_TAG" --draft=false --latest
+          git push origin --delete "$SYNC_BRANCH"

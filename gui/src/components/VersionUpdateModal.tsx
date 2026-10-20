@@ -9,6 +9,7 @@ import { error } from '@/utils/logging';
 import { useElectron } from '@/hooks/electron';
 import { openUrl } from '@/hooks/crossplatform';
 import type { AppUpdateStatus } from '../../electron/preload/interface';
+import { appUpdateAction } from '@/utils/app-updates';
 
 const CHECK_FOR_UPDATES_EVENT = 'raptorvr-check-for-updates';
 
@@ -82,6 +83,7 @@ export function VersionUpdateModal() {
       updateStatus.state === 'available' ||
       updateStatus.state === 'downloading' ||
       updateStatus.state === 'downloaded' ||
+      updateStatus.state === 'installing' ||
       updateStatus.state === 'error');
   const isWebUpdateOpen = !electron.isElectron && !!newVersion && isVersionNew;
 
@@ -94,6 +96,8 @@ export function VersionUpdateModal() {
         return 'Updating Raptor VR GUI';
       case 'downloaded':
         return 'Update downloaded';
+      case 'installing':
+        return 'Installing Raptor VR GUI';
       case 'not-available':
         return 'Raptor VR GUI is up to date';
       case 'error':
@@ -115,6 +119,8 @@ export function VersionUpdateModal() {
         return `Downloading update... ${Math.round(updateStatus.percent)}% (${formatBytes(updateStatus.transferred)} of ${formatBytes(updateStatus.total)})`;
       case 'downloaded':
         return 'The update is ready. Raptor VR GUI will restart and install it automatically.';
+      case 'installing':
+        return 'Saving your settings and restarting to install the update. Windows may ask for administrator approval.';
       case 'not-available':
         return `You already have the newest Raptor VR GUI release (${updateStatus.version}).`;
       case 'unsupported':
@@ -132,41 +138,29 @@ export function VersionUpdateModal() {
       return;
     }
 
-    if (updateStatus.state === 'available') {
+    if (appUpdateAction(updateStatus).busy) {
       return;
     }
     if (updateStatus.state === 'downloaded') {
       await electron.api.installUpdate();
       return;
     }
-    if (
-      updateStatus.state === 'error' ||
-      updateStatus.state === 'unsupported'
-    ) {
+    if (updateStatus.state === 'error' || updateStatus.state === 'idle') {
+      await electron.api.checkForUpdates();
+      return;
+    }
+    if (updateStatus.state === 'unsupported') {
       await openUrl(`https://github.com/${GH_REPO}/releases/latest`);
       return;
     }
     closeModal();
   };
 
-  const primaryLabel = !electron.isElectron
-    ? l10n.getString('version_update-update')
-    : updateStatus.state === 'available'
-      ? 'Starting download...'
-      : updateStatus.state === 'downloaded'
-        ? 'Restart now'
-        : updateStatus.state === 'error' || updateStatus.state === 'unsupported'
-          ? 'Open download page'
-          : updateStatus.state === 'checking' ||
-              updateStatus.state === 'downloading'
-            ? 'Updating automatically...'
-            : 'Done';
-
-  const isBusy =
-    electron.isElectron &&
-    (updateStatus.state === 'checking' ||
-      updateStatus.state === 'available' ||
-      updateStatus.state === 'downloading');
+  const action = appUpdateAction(updateStatus);
+  const primaryLabel = electron.isElectron
+    ? action.label
+    : l10n.getString('version_update-update');
+  const isBusy = electron.isElectron && action.busy;
 
   return (
     <BaseModal
