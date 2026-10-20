@@ -21,9 +21,6 @@ export function HomePage() {
     <>
       <div className="flex relative flex-col gap-5 h-full items-center w-full justify-center px-4 overflow-clip">
         <div className="raptor-onboarding-panel flex flex-col gap-5 items-center z-10 mb-10">
-          <div className="raptor-onboarding-kicker">
-            RAPTOR VR GUI / FIRST RUN
-          </div>
           <img
             src="/images/raptorvr-logo.png"
             alt="Raptor VR GUI"
@@ -35,22 +32,10 @@ export function HomePage() {
           <Button variant="primary" onClick={start}>
             {l10n.getString('onboarding-home-start')}
           </Button>
-          <div className="raptor-onboarding-meta" aria-label="Setup features">
-            <span>TRACKER LINK</span>
-            <span>BODY ASSIGNMENT</span>
-            <span>CALIBRATION</span>
-          </div>
         </div>
         <div className="absolute right-4 bottom-4 z-50">
           <LangSelector />
         </div>
-        <div className="raptor-onboarding-orbit" aria-hidden="true" />
-        <img
-          className="raptor-onboarding-mark"
-          src="/images/raptorvr-mark.png"
-          alt=""
-          aria-hidden="true"
-        />
       </div>
     </>
   );

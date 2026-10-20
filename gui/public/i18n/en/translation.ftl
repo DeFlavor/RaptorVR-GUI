@@ -1031,7 +1031,7 @@ install-info_udev-rules_modal_button = Close
 install-info_udev-rules_modal-dont-show-again_checkbox = Don't show again
 ## Setup start
 onboarding-home = Welcome to Raptor VR GUI
-onboarding-home-start = Let's get set up!
+onboarding-home-start = Set up trackers
 
 
 ## Setup done
@@ -1692,3 +1692,15 @@ toolbar-mounting_calibration-fingers = Fingers
 toolbar-drift_reset = Drift Reset
 toolbar-assigned_trackers = {$count} trackers assigned
 toolbar-unassigned_trackers = {$count} trackers unassigned
+
+## Tracker overview
+home-title = Trackers
+home-detected_count =
+    { $count ->
+        [one] 1 tracker detected
+       *[other] { $count } trackers detected
+    }
+home-empty_title = No trackers connected
+home-empty_description = Turn on your trackers. If this is your first time connecting them, set up their Wi-Fi connection below.
+home-connect_trackers = Connect trackers
+home-assign_trackers = Assign trackers

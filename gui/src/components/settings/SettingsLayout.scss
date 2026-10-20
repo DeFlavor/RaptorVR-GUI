@@ -25,13 +25,7 @@
 }
 
 .raptor-settings {
-  background:
-    radial-gradient(
-      circle at 88% 8%,
-      rgba(136, 76, 255, 0.13),
-      transparent 30%
-    ),
-    rgb(var(--background-80));
+  background: rgb(var(--background-80));
 }
 
 .raptor-settings__rail {
@@ -43,12 +37,9 @@
 }
 
 .raptor-settings-sidebar {
-  border: 1px solid rgba(244, 244, 241, 0.1);
-  border-radius: 18px;
-  background:
-    linear-gradient(160deg, rgba(0, 82, 255, 0.09), transparent 26%),
-    rgba(3, 3, 3, 0.46) !important;
-  box-shadow: 0 20px 55px rgba(0, 0, 0, 0.2);
+  border: 1px solid rgba(var(--background-10), 0.1);
+  border-radius: 8px;
+  background: rgb(var(--background-70)) !important;
 }
 
 .raptor-settings-sidebar__brand {
@@ -60,10 +51,10 @@
 }
 
 .raptor-settings-sidebar__brand img {
-  width: 38px;
-  height: 38px;
+  width: 30px;
+  height: 30px;
   object-fit: contain;
-  filter: invert(1) drop-shadow(0 0 8px rgba(46, 211, 255, 0.38));
+  filter: invert(1);
 }
 
 .raptor-settings-sidebar__brand > div {
@@ -80,49 +71,22 @@
 }
 
 .raptor-settings-group {
-  padding: 11px;
-  border: 1px solid rgba(244, 244, 241, 0.075);
-  border-radius: 13px;
-  background: rgba(244, 244, 241, 0.018);
+  padding: 8px 0;
 }
 
 .raptor-settings-link {
-  position: relative;
-  border: 1px solid transparent;
-  transition:
-    border-color 160ms ease,
-    background-color 160ms ease,
-    transform 160ms ease;
-}
-
-.raptor-settings-link::before {
-  content: '';
-  position: absolute;
-  left: 7px;
-  top: 50%;
-  width: 4px;
-  height: 4px;
-  border-radius: 50%;
-  background: rgb(var(--background-40));
-  transform: translateY(-50%);
+  border-radius: 4px;
+  transition: background-color 120ms ease;
 }
 
 .raptor-settings-link:hover {
-  border-color: rgba(46, 211, 255, 0.2);
-  background: rgba(46, 211, 255, 0.05);
-  transform: translateX(2px);
+  background: rgba(var(--background-10), 0.05);
 }
 
 .raptor-settings-link.is-active {
-  border-color: rgba(46, 211, 255, 0.28);
-  background: linear-gradient(
-    90deg,
-    rgba(0, 82, 255, 0.2),
-    rgba(136, 76, 255, 0.06)
-  );
+  background: rgba(var(--accent-background-20), 0.12);
 }
 
-.raptor-settings-link.is-active::before {
-  background: #2ed3ff;
-  box-shadow: 0 0 9px #2ed3ff;
+:root[data-theme='light'] .raptor-settings-sidebar__brand img {
+  filter: none;
 }

@@ -48,7 +48,6 @@ export function SettingsSidebar() {
       <div className="raptor-settings-sidebar__brand">
         <img src="/images/raptorvr-mark.png" alt="" aria-hidden="true" />
         <div>
-          <span>RAPTOR CONTROL</span>
           <Typography variant="main-title" id="settings-sidebar-title" />
         </div>
       </div>

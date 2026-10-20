@@ -16,7 +16,6 @@ import { Checklist } from '@/components/commons/icon/ChecklistIcon';
 import { useState } from 'react';
 import { HomeSettingsModal } from './HomeSettingsModal';
 import { LayoutIcon } from '@/components/commons/icon/LayoutIcon';
-import { LoaderIcon, SlimeState } from '@/components/commons/icon/LoaderIcon';
 
 export function Home() {
   const { l10n } = useLocalization();
@@ -52,11 +51,12 @@ export function Home() {
       </NavLink>
       <header className="raptor-home__header">
         <div>
-          <div className="raptor-home__eyebrow">LIVE MOTION / CONTROL DECK</div>
-          <h1>TRACKER OVERVIEW</h1>
+          <h1>{l10n.getString('home-title')}</h1>
         </div>
         <div className="raptor-home__count">
-          {trackers.length + unassignedTrackers.length} TRACKERS DETECTED
+          {l10n.getString('home-detected_count', {
+            count: trackers.length + unassignedTrackers.length,
+          })}
         </div>
       </header>
       <div className="raptor-home__scroll overflow-y-auto flex flex-col gap-3">
@@ -76,12 +76,10 @@ export function Home() {
         </div>
         {trackers.length === 0 && unassignedTrackers.length === 0 && (
           <div className="raptor-empty-deck">
-            <LoaderIcon slimeState={SlimeState.CURIOUS} size={160} />
             <div>
-              <div className="raptor-home__eyebrow">SIGNAL SEARCH / READY</div>
-              <h2>YOUR MOTION DECK IS READY.</h2>
+              <h2>{l10n.getString('home-empty_title')}</h2>
               <Typography variant="standard" color="secondary">
-                {l10n.getString('home-no_trackers')}
+                {l10n.getString('home-empty_description')}
               </Typography>
               <div className="raptor-empty-deck__actions">
                 <NavLink
@@ -89,14 +87,14 @@ export function Home() {
                   to="/onboarding/wifi-creds"
                   state={{ alonePage: true }}
                 >
-                  CONNECT TRACKERS
+                  {l10n.getString('home-connect_trackers')}
                 </NavLink>
                 <NavLink
                   className="raptor-deck-action"
                   to="/onboarding/trackers-assign"
                   state={{ alonePage: true }}
                 >
-                  BODY ASSIGNMENT
+                  {l10n.getString('home-assign_trackers')}
                 </NavLink>
               </div>
             </div>

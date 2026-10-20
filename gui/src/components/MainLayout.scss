@@ -25,20 +25,19 @@
   &__content {
     overflow: hidden;
     border: 1px solid rgba(244, 244, 241, 0.1);
-    border-radius: 18px;
-    box-shadow: 0 24px 70px rgba(0, 0, 0, 0.2);
+    border-radius: 8px;
   }
 
   &__toolbar > div > div {
     border: 1px solid rgba(244, 244, 241, 0.1);
-    border-radius: 16px;
+    border-radius: 8px;
     background: rgba(var(--background-70), 0.88);
   }
 
   &__sidebar {
     overflow: hidden;
     border: 1px solid rgba(244, 244, 241, 0.1);
-    border-radius: 16px;
+    border-radius: 8px;
     background: rgba(var(--background-70), 0.72);
   }
 

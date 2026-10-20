@@ -226,19 +226,15 @@ export function BodyInteractions({
                 }}
               >
                 {variant === 'tracker-select' ? (
-                  <>
-                    <span className="raptor-tracker-marker__strap" />
-                    <span
-                      className={classNames(
-                        'raptor-tracker-marker__module',
-                        assignedRoles.includes((BodyPart as any)[id]) &&
-                          'raptor-tracker-marker__module--assigned'
-                      )}
-                    >
-                      <span className="raptor-tracker-marker__brand">R</span>
-                      <span className="raptor-tracker-marker__led" />
-                    </span>
-                  </>
+                  <span
+                    className={classNames(
+                      'raptor-tracker-marker__circle',
+                      assignedRoles.includes((BodyPart as any)[id]) &&
+                        'raptor-tracker-marker__circle--assigned'
+                    )}
+                  >
+                    <span className="raptor-tracker-marker__core" />
+                  </span>
                 ) : (
                   <span
                     className={classNames(

@@ -118,7 +118,6 @@ export function Navbar() {
     </div>
   ) : (
     <aside className="raptor-navbar flex flex-col h-full p-3 gap-2">
-      <div className="raptor-navbar__label">CONTROL DECK</div>
       <div className="flex flex-col flex-grow gap-2">
         <MainLinks />
       </div>

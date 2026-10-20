@@ -26,10 +26,6 @@ export function LoaderIcon({
       role="img"
       aria-label={`Raptor VR ${stateName} signal`}
     >
-      <span className="raptor-signal__ring raptor-signal__ring--outer" />
-      <span className="raptor-signal__ring raptor-signal__ring--inner" />
-      <span className="raptor-signal__sweep" />
-      <span className="raptor-signal__dot" />
       <img src="/images/raptorvr-mark.png" alt="" aria-hidden="true" />
     </div>
   );

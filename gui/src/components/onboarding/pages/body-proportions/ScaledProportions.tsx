@@ -395,8 +395,7 @@ export function ScaledProportionsPage() {
         accept={acceptHeight}
       />
       <div className="raptor-proportions__label" aria-hidden="true">
-        <span>BODY GEOMETRY</span>
-        <strong>LIVE SCALE LAB</strong>
+        <strong>Body proportions</strong>
       </div>
       <div className="raptor-proportions__controls h-full max-w-2xl w-full flex flex-col justify-end xs:py-2 z-10 xs:gap-2 pointer-events-none">
         {!auto && (

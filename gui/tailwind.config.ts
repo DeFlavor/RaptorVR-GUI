@@ -293,7 +293,7 @@ const config = {
         },
       },
       backgroundImage: {
-        raptorvr: `linear-gradient(135deg, ${colors.raptorvr.cyan} 0%, ${colors.raptorvr.blue} 32%, ${colors.raptorvr.purple} 64%, ${colors.raptorvr.orange} 100%)`,
+        raptorvr: 'linear-gradient(135deg, #2663ac 50%, #1a1e24 50% 100%)',
         slime: `linear-gradient(135deg, ${colors.purple[100]} 50%, ${colors['blue-gray'][700]} 50% 100%)`,
         'slime-green': `linear-gradient(135deg, ${colors['green-accent'][100]} 50%, ${colors['green-background'][700]} 50% 100%)`,
         'slime-yellow': `linear-gradient(135deg, ${colors['yellow-accent'][100]} 50%, ${colors['yellow-background'][700]} 50% 100%)`,

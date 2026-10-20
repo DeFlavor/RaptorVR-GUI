@@ -1,3 +1,4 @@
+import { version } from '../../package.json';
 import { ReactNode, useEffect, useState } from 'react';
 import { NavLink, useMatch } from 'react-router-dom';
 import {
@@ -27,19 +28,7 @@ import { useElectron } from '@/hooks/electron';
 import { openUrl } from '@/hooks/crossplatform';
 
 export function VersionTag() {
-  return (
-    <div
-      className={classNames(
-        'raptor-core-badge flex justify-around flex-col text-standard-bold',
-        'px-3 select-text cursor-pointer'
-      )}
-      onClick={() => {
-        openUrl('https://raptorvr.shop');
-      }}
-    >
-      TRACKING CORE 20.1
-    </div>
-  );
+  return <span className="raptor-core-badge select-text">v{version}</span>;
 }
 
 export function TopBar({
@@ -135,8 +124,7 @@ export function TopBar({
   return (
     <>
       <div className="raptor-topbar-shell flex gap-0 flex-col">
-        <div className="raptor-topbar-accent h-[3px]" />
-        <div className="raptor-topbar flex gap-2 h-[calc(var(--topbar-h)-3px)] z-49">
+        <div className="raptor-topbar flex gap-2 h-[var(--topbar-h)] z-49">
           <div className="flex px-3 py-2 justify-around z-49">
             <div className="flex gap-2">
               {!isMobile && (
@@ -146,8 +134,7 @@ export function TopBar({
                 >
                   <RaptorMarkIcon />
                   <span className="raptor-brand__copy">
-                    <strong>RAPTOR VR GUI</strong>
-                    <small>MOTION CONTROL</small>
+                    <strong>Raptor VR GUI</strong>
                   </span>
                 </NavLink>
               )}

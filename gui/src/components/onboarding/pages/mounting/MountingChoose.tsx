@@ -19,9 +19,6 @@ export function MountingChoose() {
       <div className="raptor-mounting flex flex-col gap-5 h-full items-center w-full xs:justify-center relative overflow-y-auto px-4 pb-4">
         <div className="flex flex-col gap-8 justify-center raptor-mounting__content">
           <div className="xs:w-10/12 xs:max-w-[666px]">
-            <div className="raptor-mounting__eyebrow">
-              ORIENTATION LAB / CALIBRATION
-            </div>
             <Typography variant="main-title">
               {l10n.getString('onboarding-choose_mounting')}
             </Typography>
@@ -41,20 +38,14 @@ export function MountingChoose() {
                 state.alonePage && 'bg-background-60'
               )}
             >
-              <span className="raptor-mounting-card__index" aria-hidden="true">
-                01
-              </span>
-              <div className="raptor-calibration-beacon" aria-hidden="true">
-                <img src="/images/raptorvr-mark.png" alt="" />
-              </div>
-              <div className="bg-accent-background-30 absolute -left-4 -top-5 p-1.5 rounded-lg">
+              <div className="bg-accent-background-30 self-start mb-3 px-2 py-1 rounded">
                 <Typography variant="vr-accessible" italic>
                   {l10n.getString(
                     'onboarding-choose_mounting-auto_mounting-label-v2'
                   )}
                 </Typography>
               </div>
-              <div className="flex flex-col gap-4 ">
+              <div className="flex flex-col flex-1 gap-4">
                 <div className="flex flex-grow flex-col gap-4 max-w-sm">
                   <div>
                     <Typography variant="main-title" bold>
@@ -93,10 +84,7 @@ export function MountingChoose() {
                 state.alonePage && 'bg-background-60'
               )}
             >
-              <span className="raptor-mounting-card__index" aria-hidden="true">
-                02
-              </span>
-              <div className="flex flex-col gap-4">
+              <div className="flex flex-col flex-1 gap-4">
                 <div className="flex flex-grow flex-col gap-4 max-w-sm">
                   <div>
                     <Typography variant="main-title" bold>

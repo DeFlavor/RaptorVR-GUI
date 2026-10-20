@@ -233,7 +233,6 @@ export function ConnectTrackersPage() {
       </BaseModal>
       <div className="connect-tracker-layout raptor-connect h-full">
         <div style={{ gridArea: 's' }} className="raptor-connect__guide p-4">
-          <div className="raptor-connect__eyebrow">PAIRING DECK / 2.4 GHZ</div>
           <Typography variant="main-title">
             {l10n.getString('onboarding-connect_tracker-title')}
           </Typography>
@@ -267,7 +266,7 @@ export function ConnectTrackersPage() {
             />
           )}
           <div className="raptor-connect__steps" aria-hidden="true">
-            <span className="is-complete">01 / WI-FI</span>
+            <span className="is-complete">Wi-Fi</span>
             <span
               className={
                 provisioningStatus !== WifiProvisioningStatus.NONE
@@ -275,7 +274,7 @@ export function ConnectTrackersPage() {
                   : ''
               }
             >
-              02 / PAIR
+              Connecting
             </span>
             <span
               className={
@@ -284,7 +283,7 @@ export function ConnectTrackersPage() {
                   : ''
               }
             >
-              03 / READY
+              Connected
             </span>
           </div>
           <div
@@ -301,10 +300,6 @@ export function ConnectTrackersPage() {
               )}
               aria-hidden="true"
             >
-              <span className="raptor-signal__ring raptor-signal__ring--outer" />
-              <span className="raptor-signal__ring raptor-signal__ring--inner" />
-              <span className="raptor-signal__sweep" />
-              <span className="raptor-signal__dot" />
               <img src="/images/raptorvr-mark.png" alt="" />
             </div>
 
@@ -351,7 +346,7 @@ export function ConnectTrackersPage() {
           className="raptor-connect__deck-title flex items-center justify-between px-5 pt-5"
         >
           <div>
-            <span>LIVE TRACKER DECK</span>
+            <span>Trackers</span>
             <Typography bold>
               {l10n.getString('onboarding-connect_tracker-connected_trackers', {
                 amount: connectedIMUTrackers.length,

@@ -15,7 +15,6 @@ const ASSIGN_MODE_OPTIONS = [
   AssignMode.Core,
   AssignMode.EnhancedCore,
   AssignMode.FullBody,
-  AssignMode.All,
 ].reduce(
   (options, mode) => ({ ...options, [mode]: ASSIGNMENT_MODES[mode].length }),
   {} as Record<AssignMode, number>
@@ -66,7 +65,7 @@ export function TrackerAssignOptions({
     return (
       (Object.entries(ASSIGN_MODE_OPTIONS).find(
         ([_, count]) => count >= connectedIMUTrackers.length
-      )?.[0] as AssignMode) ?? AssignMode.All
+      )?.[0] as AssignMode) ?? AssignMode.FullBody
     );
   };
 

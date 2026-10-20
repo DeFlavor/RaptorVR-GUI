@@ -432,8 +432,7 @@ export function ManualProportionsPage() {
             className="raptor-proportions__label raptor-proportions__label--manual"
             aria-hidden="true"
           >
-            <span>BODY GEOMETRY</span>
-            <strong>PRECISION EDITOR</strong>
+            <strong>Body measurements</strong>
           </div>
           <div className="flex gap-2">
             <Localized id="onboarding-manual_proportions-back-scaled">
